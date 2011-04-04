@@ -30,6 +30,10 @@ class WebApps                 < uuid 58c8d270-5841-4344-8502-7bdfda17ed1b
                               < default WordPress
                               < gridwidth 10
 
+#    string newdbname          : Database Name (leave blank)
+
+#    string newdbuser          : Database Username (leave blank)
+
     password password         : Database Password
                               < gridhide true
                               < visible false

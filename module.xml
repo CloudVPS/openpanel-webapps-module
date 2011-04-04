@@ -28,6 +28,8 @@
 			<parameters>
 				<p id="name" enabled="true" visible="true" required="true" type="string" regexp="^[a-zA-Z0-9 ]*$" gridwidth="10">Name</p>
 				<p id="model" enabled="false" visible="true" required="true" type="enum" default="WordPress" gridwidth="10">Application</p>
+				<!--<p id="newdbname" enabled="false" visible="true" required="true" type="string">Database Name (leave blank)</p>-->
+				<!--<p id="newdbuser" enabled="false" visible="true" required="true" type="string">Database User (leave blank)</p>-->
 				<p id="password" enabled="true" visible="false" required="true" type="password" gridhide="true">Database Password</p>
 				<p id="password2" enabled="true" visible="false" required="true" type="password" gridhide="true">Repeat Password</p>
 				<p id="email" enabled="true" visible="true" required="true" type="string" example="webmaster@example.net">Admin Email</p>

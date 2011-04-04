@@ -121,12 +121,15 @@ WebApps.configureJoomla() {
     # Finally, insert the sql tables
     sed -i "s/#__/jos_/g" "/var/openpanel/conf/staging/WebApps/tmp/installation/sql/mysql/joomla.sql" &>> /var/openpanel/conf/staging/WebApps/sed.log
     sed -i "s/#__/jos_/g" "/var/openpanel/conf/staging/WebApps/tmp/installation/sql/mysql/sample_data.sql" &>> /var/openpanel/conf/staging/WebApps/sed.log
-#exiterror blah
     mysql -uadmin-$uid -p$password jmsql-$uid < /var/openpanel/conf/staging/WebApps/tmp/installation/sql/mysql/joomla.sql
     mysql -uadmin-$uid -p$password jmsql-$uid < /var/openpanel/conf/staging/WebApps/tmp/installation/sql/mysql/sample_data.sql
     mysql_cmd="mysql -u admin-$uid -p$password jmsql-$uid"
     datetime=$(date +'%F %T')
-    $mysql_cmd -e "INSERT INTO jos_users VALUES (62, 'Administrator', 'admin', '$email', '21232f297a57a5a743894a0e4a801fc3', 'Super Administrator', 0, 1, 25, '$datetime', '$datetime', '', '')" &>> /var/openpanel/conf/staging/WebApps/dbpopulate.log
+#$fulluid
+    passhash=$(echo -n "$password$fulluid" | md5sum)
+    passsalt="${passhash:0:32}:$fulluid"
+#    exiterror "$passhash  |||  $passsalt"
+    $mysql_cmd -e "INSERT INTO jos_users VALUES (62, 'Administrator', 'admin', '$email', '$passsalt', 'Super Administrator', 0, 1, 25, '$datetime', '$datetime', '', '')" &>> /var/openpanel/conf/staging/WebApps/dbpopulate.log
     $mysql_cmd -e "INSERT INTO jos_core_acl_aro VALUES (10,'users','62',0,'Administrator',0)" &>> /var/openpanel/conf/staging/WebApps/dbpopulate.log
     $mysql_cmd -e "INSERT INTO jos_core_acl_groups_aro_map VALUES (25,'',10)" &>> /var/openpanel/conf/staging/WebApps/dbpopulate.log
   fi
@@ -245,7 +248,8 @@ WebApps.create() {
   #------------------------
   # Generate unique DB name (clipped to only 4 chars, may cause collisions)
   hash=$(echo "${model}:$user:$id" | md5sum)
-  uid=${hash:0:4}
+  fulluid=${hash:0:32}
+  uid=${fulluid:0:4}
 
   #----------------------------------------
   # Perform appropriate installation action
