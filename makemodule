@@ -1,0 +1,3 @@
+coreunreg WebApps.module
+mkmodulexml < /var/openpanel/modules/WebApps.module/module.def > /var/openpanel/modules/WebApps.module/module.xml
+/etc/init.d/openpanel-core restart

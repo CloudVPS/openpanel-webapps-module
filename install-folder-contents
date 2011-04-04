@@ -1,0 +1,60 @@
+#!/bin/sh
+#
+
+cd /tmp
+
+echo "Entered install-folder-contents..." >> /var/openpanel/log/installbg.log
+
+# validate session-id
+SESSION_ID=`echo "$1" | egrep "^[-0123456789abcdef]*$"`
+if [ -z "$SESSION_ID" ]; then
+  echo "Invalid session ($*)" >> /var/openpanel/log/installbg.log
+  exit 2
+fi
+
+# parse other arguments
+FROM_FOLDER="$2"
+if [ -z "$FROM_FOLDER" ]; then
+  echo "No source folder specified ($*)" >> /var/openpanel/log/installbg.log
+  exit 3
+fi
+
+TO_FOLDER="$3"
+if [ -z "$TO_FOLDER" ]; then
+  echo "No destination folder specified ($*)" >> /var/openpanel/log/installbg.log
+  exit 4
+fi
+
+# optional arguments
+FUID="$4"
+FGID="$5"
+MODE="$6"
+
+# set defaults for the optionals if needed
+if [ -z "$MODE" ]; then
+  MODE="0644"
+fi
+if [ -z "$FGID" ]; then
+  FGID=""
+fi
+if [ -z "$FUID" ]; then
+  FUID=""
+fi
+
+# move the files from source to destination
+/var/openpanel/tools/runas 0 0 /bin/mv -n -v "$FROM_FOLDER"* "$TO_FOLDER" >> /var/openpanel/log/installbg.log
+# || {
+#	echo "Folder install failed ($*)" >> /var/openpanel/log/installbg.log
+#	exit 5
+#}
+if [ $FGID != "" ]; then
+  if [ $FUID != "" ]; then
+    chown -R $FGID:$FUID $TO_FOLDER
+  else
+    chown -R $FGID $TO_FOLDER
+  fi
+fi
+chmod -R $MODE $TO_FOLDER
+
+echo "Exiting install-folder-contents..." >> /var/openpanel/log/installbg.log
+exit 0

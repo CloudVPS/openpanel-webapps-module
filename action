@@ -1,0 +1,355 @@
+#!/bin/bash
+. /var/openpanel/api/sh/module.sh
+
+#Module.getconfig() 
+#  exitquiet
+#}
+
+WebApps.parseXML() {
+  if [ $# != 1 ]; then
+    exiterror "WebApps.parseXML called with incorrect number of parameters: '$*'"
+  else
+    xmlFile=$1
+    elemList=( $(cat $xmlFile | tr '\n' ' ' | XMLLINT_INDENT="" xmllint --format - | /bin/grep -e "</.*>$" | while read line; do \
+      echo $line | sed -e 's/^.*<\///' | cut -d '>' -f 1; \
+    done) )
+
+    totalNoOfTags=${#elemList[@]}; ((totalNoOfTags--))
+    suffix=$(echo ${elemList[$totalNoOfTags]} | tr -d '</>')
+    suffix="${suffix}_"
+
+    for (( i = 0 ; i < ${#elemList[@]} ; i++ )); do
+      elem=${elemList[$i]}
+      elemLine=$(cat $xmlFile | tr '\n' ' ' | XMLLINT_INDENT="" xmllint --format - | /bin/grep "</$elem>")
+      echo $elemLine | grep -e "^</[^ ]*>$" 1>/dev/null 2>&1
+      if [ "0" = "$?" ]; then
+        continue
+      fi
+      elemVal=$(echo $elemLine | tr '\011' '\040'| sed -e 's/^[ ]*//' -e 's/^<.*>\([^<].*\)<.*>$/\1/' | sed -e 's/^[ ]*//' | sed -e 's/[ ]*$//')
+      xmlElem="${suffix}$(echo $elem | sed 's/-/_/g')"
+      eval ${xmlElem}=`echo -ne \""${elemVal}"\"`
+      attrList=($(cat $xmlFile | tr '\n' ' ' | XMLLINT_INDENT="" xmllint --format - | /bin/grep "</$elem>" | tr '\011' '\040' | sed -e 's/^[ ]*//' | cut -d '>' -f 1  | sed -e 's/^<[^ ]*//' | tr "'" '"' | tr '"' '\n'  | tr '=' '\n' | sed -e 's/^[ ]*//' | sed '/^$/d' | tr '\011' '\040' | tr ' ' '>'))
+      for (( j = 0 ; j < ${#attrList[@]} ; j++ )); do
+        attr=${attrList[$j]}
+        ((j++))
+        attrVal=$(echo ${attrList[$j]} | tr '>' ' ')
+        attrName=`echo -ne ${xmlElem}_${attr}`
+        eval ${attrName}=`echo -ne \""${attrVal}"\"`
+      done
+    done
+  fi
+}
+
+WebApps.configureWordPress() {
+  if [ $# != 0 ]; then
+    error="WebApps.configureWordPress called with incorrect number of parameters: '$*'"
+  else
+    # Backup sample config
+    cp /var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config-sample.php /var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config-sample.bak
+
+    # Perform simple swap of database settings
+    sed -i "s/database_name_here/wpsql-$uid/g" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config-sample.php" &> /var/openpanel/conf/staging/WebApps/sed.log
+    sed -i "s/username_here/admin/g" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config-sample.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    sed -i "s/password_here/$password/g" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config-sample.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    #sed -i "s/localhost/localhost/g" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config-sample.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    #sed -i "s/define('DB_HOST', 'localhost')/define('DB_HOST', 'localhost')/g" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config-sample.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    
+    # Tokenise the salt file provided by WordPress by line into 'Array'
+    keys=`exec wget -q -O - https://api.wordpress.org/secret-key/1.1/salt/`
+    set -- "$keys"
+    IFS="$(echo -e '\n\r')"; declare -a Array=($*)
+
+    # Replace keys/salts (done in reverse order due to 'AUTH_' being substring of 'SECURE_AUTH_')
+    # Ampersand must be escaped before being passed to sed
+    replace=${Array[7]//\&/\\\&}
+    sed -i "s£^.*NONCE_SALT.*put your unique phrase here.*$£${replace}£g" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config-sample.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    replace=${Array[6]//\&/\\\&}
+    sed -i "s£^.*LOGGED_IN_SALT.*put your unique phrase here.*$£${replace}£g" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config-sample.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    replace=${Array[5]//\&/\\\&}
+    sed -i "s£^.*SECURE_AUTH_SALT.*put your unique phrase here.*$£${replace}£g" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config-sample.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    replace=${Array[4]//\&/\\\&}
+    sed -i "s£^.*AUTH_SALT.*put your unique phrase here.*$£${replace}£g" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config-sample.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    replace=${Array[3]//\&/\\\&}
+    sed -i "s£^.*NONCE_KEY.*put your unique phrase here.*$£${replace}£g" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config-sample.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    replace=${Array[2]//\&/\\\&}
+    sed -i "s£^.*LOGGED_IN_KEY.*put your unique phrase here.*$£${replace}£g" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config-sample.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    replace=${Array[1]//\&/\\\&}
+    sed -i "s£^.*SECURE_AUTH_KEY.*put your unique phrase here.*$£${replace}£g" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config-sample.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    replace=${Array[0]//\&/\\\&}
+    sed -i "s£^.*AUTH_KEY.*put your unique phrase here.*$£${replace}£g" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config-sample.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+
+    # Rename config
+    mv /var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config-sample.php /var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config.php
+
+    # Backup install script
+    cp /var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-admin/install.php /var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-admin/install.bak
+
+    # Perform simple swap of install defaults settings
+    replace="weblog_title.*'';$"
+    with="weblog_title = '$title';"
+    sed -i "s/$replace/$with/1" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-admin/install.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    replace="admin_email.*'';$"
+    with="admin_email = '$email';"
+    sed -i "s/$replace/$with/1" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-admin/install.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+  fi
+}
+
+WebApps.configureJoomla() {
+  if [ $# != 0 ]; then
+    error="WebApps.configureJoomla called with incorrect number of parameters: '$*'"
+  else
+    cd /var/openpanel/conf/staging/WebApps &>> /var/openpanel/conf/staging/WebApps/webapps.log
+    mv tmp joomla &>> /var/openpanel/conf/staging/WebApps/webapps.log
+    mkdir tmp &>> /var/openpanel/conf/staging/WebApps/webapps.log
+    mv joomla ./tmp/ &>> /var/openpanel/conf/staging/WebApps/webapps.log
+    cd tmp &>> /var/openpanel/conf/staging/WebApps/webapps.log
+    mv joomla/configuration.php-dist joomla/configuration.php &>> /var/openpanel/conf/staging/WebApps/webapps.log
+    mv joomla/installation ./
+    sed -i "s/sitename =.*';/sitename = '$title';/g" "/var/openpanel/conf/staging/WebApps/tmp/joomla/configuration.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    sed -i "s/dbtype =.*';/dbtype = 'mysql';/g" "/var/openpanel/conf/staging/WebApps/tmp/joomla/configuration.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    sed -i "s/host =.*';/host = 'localhost';/g" "/var/openpanel/conf/staging/WebApps/tmp/joomla/configuration.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    sed -i "s/user =.*';/user = 'admin';/g" "/var/openpanel/conf/staging/WebApps/tmp/joomla/configuration.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    sed -i "s/password =.*';/password = '$password';/g" "/var/openpanel/conf/staging/WebApps/tmp/joomla/configuration.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    sed -i "s/db =.*';/db = 'jmsql-$uid';/g" "/var/openpanel/conf/staging/WebApps/tmp/joomla/configuration.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    #hash=$(echo "${model}:$user:$id" | md5sum)
+    #secret=${hash:0:16}
+    #sed -i "s/secret = '.*';/secret = '$secret';/g" "/var/openpanel/conf/staging/WebApps/tmp/joomla/configuration.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    
+    # Remove root user value
+    #sed -i "s/^.*root_user =.*';$//g" "/var/openpanel/conf/staging/WebApps/tmp/joomla/configuration.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    
+    # Finally, insert the sql tables
+    sed -i "s/#__/jos_/g" "/var/openpanel/conf/staging/WebApps/tmp/installation/sql/mysql/joomla.sql" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    sed -i "s/#__/jos_/g" "/var/openpanel/conf/staging/WebApps/tmp/installation/sql/mysql/sample_data.sql" &>> /var/openpanel/conf/staging/WebApps/sed.log
+#exiterror blah
+    mysql -uadmin -p$password jmsql-$uid < /var/openpanel/conf/staging/WebApps/tmp/installation/sql/mysql/joomla.sql
+    mysql -uadmin -p$password jmsql-$uid < /var/openpanel/conf/staging/WebApps/tmp/installation/sql/mysql/sample_data.sql
+    mysql_cmd="mysql -u admin -p$password jmsql-$uid"
+    datetime=$(date +'%F %T')
+    $mysql_cmd -e "INSERT INTO jos_users VALUES (62, 'Administrator', 'admin', '$email', '21232f297a57a5a743894a0e4a801fc3', 'Super Administrator', 0, 1, 25, '$datetime', '$datetime', '', '')" &>> /var/openpanel/conf/staging/WebApps/dbpopulate.log
+    $mysql_cmd -e "INSERT INTO jos_core_acl_aro VALUES (10,'users','62',0,'Administrator',0)" &>> /var/openpanel/conf/staging/WebApps/dbpopulate.log
+    $mysql_cmd -e "INSERT INTO jos_core_acl_groups_aro_map VALUES (25,'',10)" &>> /var/openpanel/conf/staging/WebApps/dbpopulate.log
+  fi
+}
+
+WebApps.downloadToHost() {
+  if [ $# != 2 ]; then
+    exiterror "WebApps.downloadToHost called with incorrect number of parameters: '$*'"
+  else
+    # Prepare temp folder
+    cd /var/openpanel/conf/staging/WebApps &>> /var/openpanel/conf/staging/WebApps/webapps.log
+    mkdir tmp &> /var/openpanel/conf/staging/WebApps/webapps.log
+    cd tmp &>> /var/openpanel/conf/staging/WebApps/webapps.log
+
+    if [ ! -f /var/openpanel/conf/staging/WebApps/cache/$2 ]; then
+      # Download and unpack latest WordPress build
+      wget -O$2 -nc -t3 $1 &>> /var/openpanel/conf/staging/WebApps/webapps.log
+    else
+      # Copy from cache
+      cp /var/openpanel/conf/staging/WebApps/cache/$2 ./ &>> /var/openpanel/conf/staging/WebApps/webapps.log
+    fi
+
+    if [ $? = 0 ]; then
+      # Succeessfully downloaded wordpress
+      if [ ! -f /var/openpanel/conf/staging/WebApps/cache/$2 ]; then
+        mkdir /var/openpanel/conf/staging/WebApps/cache &>> /var/openpanel/conf/staging/WebApps/webapps.log
+        cp $2 /var/openpanel/conf/staging/WebApps/cache/$2 &>> /var/openpanel/conf/staging/WebApps/webapps.log
+      fi
+      tar -zxvf $2 &>> /var/openpanel/conf/staging/WebApps/unpack.log
+      rm $2
+      if [ $? = 0 ]; then
+        # Successfully unpacked downloaded file
+        error=""
+      else
+        error="Failed to unpack downloaded file. Please try again."
+      fi
+    else
+      error="Failed to download. Please try again."
+    fi
+  fi
+}
+
+WebApps.createDB () {
+  if [ $# != 4 ]; then
+    exiterror "WebApps.createDB called with incorrect number of parameters: '$*'"
+  else
+    session=$1
+    dbname=$2
+    dbuser=$3
+    dbpassword=$4
+
+    # Create the database
+    coreclient -h localhost -s $session -c create classid MySQL:Database objectid $dbname &> /var/openpanel/conf/staging/WebApps/dbcreate.log
+    WebApps.parseXML "/var/openpanel/conf/staging/WebApps/dbcreate.log"
+    if [ "$dict_integer" = "8192" ]; then
+      error="Database '$dbname' already exists. If this was used by a previous installation attempt of this WebApp, please remove it and try again."
+    elif [ "$dict_integer" != "0" ]; then
+      error="Error creating database"
+    else
+      # Create the database admin user
+      coreclient -h localhost -s $session -c create classid MySQL:DBUser objectid $dbuser parentid $dict_string data.permissions admin data.password $password &> /var/openpanel/conf/staging/WebApps/dbusercreate.log
+      WebApps.parseXML "/var/openpanel/conf/staging/WebApps/dbusercreate.log"
+      if [ "$dict_integer" != "0" ]; then
+        error="Error creating database user '$dbuser'"
+      fi
+    fi
+  fi
+}
+
+WebApps.create() {
+  title=$(coreval WebApps name)
+  model=$(coreval WebApps model)
+  password=$(coreval WebApps password)
+  password2=$(coreval WebApps password2)
+  email=$(coreval WebApps email)
+  id=$(coreval Domain:Vhost id)
+  session=$(coreval OpenCORE:Session sessionid)
+  user=""
+  vhostdir=""
+  error=""
+
+  #--------------------------------
+  # Check that entered passwords match
+  if [ $password != $password2 ]; then
+    exiterror "The passwords entered do not match. Please check and try again."
+  fi
+
+  #--------------------------------
+  # Copy coreclient to staging area (!!!!MUST BE REMOVED it will be installed for OP1.1!!!!)
+  cd /var/openpanel/conf/staging/WebApps
+  cp /var/openpanel/modules/WebApps.module/coreclient ./
+  PATH=$PATH:/var/openpanel/conf/staging/WebApps
+
+  #------------------------
+  # Ensure session is valid
+  if [ "$session" = "" ]; then
+    exiterror "Unexpected error! Session ID not obtained from RPC. Unable to proceed."
+  fi
+
+  #-------------------
+  # Obtain parent user (!!!!MUST BE CHANGED TO owner-metaid from OP1.1!!!!)
+  coreclient -h localhost -s $session -c getrecords classid User parentid $session &> /var/openpanel/conf/staging/WebApps/session.log
+  WebApps.parseXML "/var/openpanel/conf/staging/WebApps/session.log"
+  user=$dict_string
+  if [ ! -d /home/$user ]; then
+    exiterror "Unexpected error! Unable to obtain valid username."
+  fi
+  
+  #---------------------------------------------
+  # Ensure subdomain already exists (as a vhost)
+  vhostdir="/home/$user/sites/$id"
+  if [ ! -d "$vhostdir/public_html" ]; then
+    exiterror "Unexpected error! Invalid vhost. Unable to locate public_html folder."
+  fi
+
+  #------------------------
+  # Generate unique DB name (clipped to only 4 chars, may cause collisions)
+  hash=$(echo "${model}:$user:$id" | md5sum)
+  uid=${hash:0:4}
+
+  #----------------------------------------
+  # Perform appropriate installation action
+  if [ ${model} = "WordPress" ]; then
+    if [ -f "$vhostdir/public_html/wp-config.php" ]; then
+      error="WordPress is already installed for this vhost. To reinstall Wordpress you must first remove the existing installation (and associated database/files) and try again."
+    else
+      WebApps.downloadToHost "http://wordpress.org/latest.tar.gz" "latest.tar.gz"
+      if [ "$error" = "" ]; then
+        # Finally create the database for Wordpress to use
+        WebApps.createDB $session "wpsql-$uid" "admin" "$password"
+        if [ "$error" = "" ]; then
+          # Configure wordpress config and installer
+          WebApps.configureWordPress
+          # Copy WordPress to vhost folder
+          authd runscript install-folder-contents "$session" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/" "$vhostdir/public_html/" "www-data" "www-data" "777"
+        fi
+      fi
+    fi
+  elif [ ${model} = "WordPress-3.1" ]; then
+    if [ -f "$vhostdir/public_html/wp-config.php" ]; then
+      error="WordPress is already installed for this vhost. To reinstall WordPress you must first remove the existing installation (and associated database/files) and try again."
+    else
+      WebApps.downloadToHost "http://wordpress.org/wordpress-3.1.tar.gz" "wordpress-3.1.tar.gz"
+      if [ "$error" = "" ]; then
+        # Finally create the database for Wordpress to use
+        WebApps.createDB $session "wpsql-$uid" "admin" "$password"
+        if [ "$error" = "" ]; then
+          # Configure wordpress config and installer
+          WebApps.configureWordPress
+          # Copy WordPress to vhost folder
+          authd runscript install-folder-contents "$session" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/" "$vhostdir/public_html/" "www-data" "www-data" "777"
+        fi
+      fi
+    fi
+  elif [ ${model} = "Joomla-1.6.0" ]; then
+    if [ -f "$vhostdir/public_html/configuration.php" ]; then
+      error="Joomla is already installed for this vhost. To reinstall Joomla you must first remove the existing installation (and associated database/files) and try again."
+    else
+      WebApps.downloadToHost "http://joomlacode.org/gf/download/frsrelease/13869/60197/Joomla_1.6.0-Stable-Full_Package.tar.gz" "Joomla_1.6.0-Stable-Full_Package.tar.gz"
+      if [ "$error" = "" ]; then
+        # Finally create the database for Wordpress to use
+        WebApps.createDB $session "jmsql-$uid" "admin" "$password"
+        if [ "$error" = "" ]; then
+          # Configure joomla config and installer
+          WebApps.configureJoomla
+          if [ "$error" = "" ]; then
+            # Copy Joomla to vhost folder
+            authd runscript install-folder-contents "$session" "/var/openpanel/conf/staging/WebApps/tmp/joomla/" "$vhostdir/public_html/" "www-data" "www-data" "777"
+          fi
+        fi
+      fi
+    fi
+  elif [ ${model} = "Joomla-1.5.22" ]; then
+    if [ -f "$vhostdir/public_html/configuration.php" ]; then
+      error="Joomla is already installed for this vhost. To reinstall Joomla you must first remove the existing installation (and associated database/files) and try again."
+    else
+      WebApps.downloadToHost "http://joomlacode.org/gf/download/frsrelease/13105/57239/Joomla_1.5.22-Stable-Full_Package.tar.gz" "Joomla_1.5.22-Stable-Full_Package.tar.gz"
+      if [ "$error" = "" ]; then
+        # Finally create the database for Wordpress to use
+        WebApps.createDB $session "jmsql-$uid" "admin" "$password"
+        if [ "$error" = "" ]; then
+          # Configure joomla config and installer
+          WebApps.configureJoomla
+          if [ "$error" = "" ]; then
+            # Copy Joomla to vhost folder
+            authd runscript install-folder-contents "$session" "/var/openpanel/conf/staging/WebApps/tmp/joomla/" "$vhostdir/public_html/" "www-data" "www-data" "777"
+          fi
+        fi
+      fi
+    fi
+  elif [ ${model} = "Drupal" ]; then
+    error="Drupal is not currently supported. Please select another WebApp."
+  elif [ ${model} = "phpMyAdmin-3.3.10" ]; then
+    if [ -d "$vhostdir/phpMyAdmin" ]; then
+      error="phpMyAdmin is already installed for this vhost. To reinstall Joomla you must first remove the existing installation (and files) and try again."
+    else
+      WebApps.downloadToHost "http://downloads.sourceforge.net/project/phpmyadmin/phpMyAdmin/3.3.10/phpMyAdmin-3.3.10-all-languages.tar.gz?r=&ts=1301700394&use_mirror=cdnetworks-us-1" "phpMyAdmin-3.3.10-all-languages.tar.gz"
+      mkdir phpMyAdmin
+      mv phpMyAdmin-3.3.10-all-languages phpMyAdmin/phpMyAdmin
+      if [ "$error" = "" ]; then
+        authd runscript install-folder-contents "$session" "/var/openpanel/conf/staging/WebApps/tmp/phpMyAdmin/" "$vhostdir/public_html/"
+      fi
+    fi
+  else
+    error="The selected WebApp is not currently supported. Please select another WebApp."
+  fi
+
+  # Clean up (simply remove tmp folder)
+  cd /var/openpanel/conf/staging/WebApps &>> /var/openpanel/conf/staging/WebApps/webapps.log
+  rm -R tmp &>> /var/openpanel/conf/staging/WebApps/webapps.log
+
+  # Report any errors
+  if [ "$error" != "" ]; then
+    exiterror "$error"
+  fi
+}
+
+#WebApps.update() {
+#  WebApps.create
+#}
+
+WebApps.delete() {
+  id=$(coreval Domain:Vhost id)
+}
+
+implement WebApps.module

@@ -1,0 +1,8 @@
+#!/bin/sh
+if [ ! -d /etc/webapps ]; then
+  echo "Missing /etc/webapps"
+  echo "quit" >&3
+  exit 1
+fi
+echo "quit" >&3
+exit 0

@@ -1,0 +1,2 @@
+coreunreg WebApps.module
+/etc/init.d/openpanel-core restart

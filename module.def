@@ -1,0 +1,96 @@
+module WebApps                < uuid cf2fc559-542c-4185-ab51-76170a28a6a3
+                              < version 1.0
+                              < languages en_EN
+                              < apitype commandline
+                              < wantsrpc true
+                              < getconfig false
+                              < author Karl White
+                              < license GPLv3
+                              < url http://www.charisma-studios.com
+                              
+class WebApps                 < uuid 58c8d270-5841-4344-8502-7bdfda17ed1b
+                              < version 3
+                              < indexing auto
+                              < requires Domain:Vhost
+                              < shortname WebApps
+                              < description WebApps Installation
+                              < emptytext No webapps have been installed
+                              < title WebApps
+                              < uniquein class
+                              # < parentrealm domainsuffix
+                              < allchildren true
+                              < capabilities create delete #update
+       
+    string name               : Name
+                              < regexp ^[a-zA-Z0-9 ]*$
+                              < gridwidth 10
+
+    enum model                : Application
+                              < enabled false
+                              < default WordPress
+                              < gridwidth 10
+
+    password password         : Database Password
+                              < gridhide true
+                              < visible false
+
+    password password2        : Repeat Password
+                              < gridhide true
+                              < visible false
+
+    string email              : Admin Email
+                              < example webmaster@example.net
+
+# ----------------------------------------------------------------------------
+#class WebAppsService          < uuid 0ee62a75-5f08-43bc-9c75-497d1407390b
+#                              < version 1
+#                              < indexing manual
+#                              < shortname webappsd
+#                              < title WebApps Service
+#                              < description Global configuration for WebApps.
+#                              < uniquein class
+#                              < singleton webappsd
+#
+#    integer listenport        : TCP Listening Port
+#    string servername         : Advertised server name
+#
+# ----------------------------------------------------------------------------
+#class WebAppsUser             < uuid 2582d87a-a4cc-40fe-ba6e-c4a79581a6c1
+#                              < version 1
+#                              < indexing manual
+#                              < requires WebApps
+#                              < title WebApps User
+#                              < shortname user
+#                              < description A user that can log into the WebApps
+#                              < uniquein parent
+#                              < capabilities create delete update
+#
+#                              
+#    password password         : Password
+#                              < crypt md5
+#                              
+# ============================================================================
+# ENUMS
+# ============================================================================
+enum model
+    value WordPress           : Wordpress (latest)
+    value WordPress-3.1       : Wordpress (3.1)
+#    value Joomla-1.6.0        : Joomla (1.6.0)
+    value Joomla-1.5.22       : Joomla (1.5.22)
+    value Drupal              : Drupal (not yet supported)
+    value phpMyAdmin-3.3.10   : phpMyAdmin (3.3.10)
+
+# ============================================================================
+# AUTHD
+# ============================================================================
+authd fileops
+    match *.webapps           : /etc/webapps
+                              < user root
+                              < group root
+                              < perms 0755
+    match *                   : *
+                              < user root
+                              < group root
+                              < perms 0755
+authd commands
+    command                   install-folder-contents
