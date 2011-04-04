@@ -49,7 +49,7 @@ WebApps.configureWordPress() {
 
     # Perform simple swap of database settings
     sed -i "s/database_name_here/wpsql-$uid/g" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config-sample.php" &> /var/openpanel/conf/staging/WebApps/sed.log
-    sed -i "s/username_here/admin/g" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config-sample.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    sed -i "s/username_here/admin-$uid/g" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config-sample.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
     sed -i "s/password_here/$password/g" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config-sample.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
     #sed -i "s/localhost/localhost/g" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config-sample.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
     #sed -i "s/define('DB_HOST', 'localhost')/define('DB_HOST', 'localhost')/g" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config-sample.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
@@ -108,7 +108,7 @@ WebApps.configureJoomla() {
     sed -i "s/sitename =.*';/sitename = '$title';/g" "/var/openpanel/conf/staging/WebApps/tmp/joomla/configuration.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
     sed -i "s/dbtype =.*';/dbtype = 'mysql';/g" "/var/openpanel/conf/staging/WebApps/tmp/joomla/configuration.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
     sed -i "s/host =.*';/host = 'localhost';/g" "/var/openpanel/conf/staging/WebApps/tmp/joomla/configuration.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
-    sed -i "s/user =.*';/user = 'admin';/g" "/var/openpanel/conf/staging/WebApps/tmp/joomla/configuration.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    sed -i "s/user =.*';/user = 'admin-$uid';/g" "/var/openpanel/conf/staging/WebApps/tmp/joomla/configuration.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
     sed -i "s/password =.*';/password = '$password';/g" "/var/openpanel/conf/staging/WebApps/tmp/joomla/configuration.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
     sed -i "s/db =.*';/db = 'jmsql-$uid';/g" "/var/openpanel/conf/staging/WebApps/tmp/joomla/configuration.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
     #hash=$(echo "${model}:$user:$id" | md5sum)
@@ -122,9 +122,9 @@ WebApps.configureJoomla() {
     sed -i "s/#__/jos_/g" "/var/openpanel/conf/staging/WebApps/tmp/installation/sql/mysql/joomla.sql" &>> /var/openpanel/conf/staging/WebApps/sed.log
     sed -i "s/#__/jos_/g" "/var/openpanel/conf/staging/WebApps/tmp/installation/sql/mysql/sample_data.sql" &>> /var/openpanel/conf/staging/WebApps/sed.log
 #exiterror blah
-    mysql -uadmin -p$password jmsql-$uid < /var/openpanel/conf/staging/WebApps/tmp/installation/sql/mysql/joomla.sql
-    mysql -uadmin -p$password jmsql-$uid < /var/openpanel/conf/staging/WebApps/tmp/installation/sql/mysql/sample_data.sql
-    mysql_cmd="mysql -u admin -p$password jmsql-$uid"
+    mysql -uadmin-$uid -p$password jmsql-$uid < /var/openpanel/conf/staging/WebApps/tmp/installation/sql/mysql/joomla.sql
+    mysql -uadmin-$uid -p$password jmsql-$uid < /var/openpanel/conf/staging/WebApps/tmp/installation/sql/mysql/sample_data.sql
+    mysql_cmd="mysql -u admin-$uid -p$password jmsql-$uid"
     datetime=$(date +'%F %T')
     $mysql_cmd -e "INSERT INTO jos_users VALUES (62, 'Administrator', 'admin', '$email', '21232f297a57a5a743894a0e4a801fc3', 'Super Administrator', 0, 1, 25, '$datetime', '$datetime', '', '')" &>> /var/openpanel/conf/staging/WebApps/dbpopulate.log
     $mysql_cmd -e "INSERT INTO jos_core_acl_aro VALUES (10,'users','62',0,'Administrator',0)" &>> /var/openpanel/conf/staging/WebApps/dbpopulate.log
@@ -256,7 +256,7 @@ WebApps.create() {
       WebApps.downloadToHost "http://wordpress.org/latest.tar.gz" "latest.tar.gz"
       if [ "$error" = "" ]; then
         # Finally create the database for Wordpress to use
-        WebApps.createDB $session "wpsql-$uid" "admin" "$password"
+        WebApps.createDB $session "wpsql-$uid" "admin-$uid" "$password"
         if [ "$error" = "" ]; then
           # Configure wordpress config and installer
           WebApps.configureWordPress
@@ -272,7 +272,7 @@ WebApps.create() {
       WebApps.downloadToHost "http://wordpress.org/wordpress-3.1.tar.gz" "wordpress-3.1.tar.gz"
       if [ "$error" = "" ]; then
         # Finally create the database for Wordpress to use
-        WebApps.createDB $session "wpsql-$uid" "admin" "$password"
+        WebApps.createDB $session "wpsql-$uid" "admin-$uid" "$password"
         if [ "$error" = "" ]; then
           # Configure wordpress config and installer
           WebApps.configureWordPress
@@ -288,7 +288,7 @@ WebApps.create() {
       WebApps.downloadToHost "http://joomlacode.org/gf/download/frsrelease/13869/60197/Joomla_1.6.0-Stable-Full_Package.tar.gz" "Joomla_1.6.0-Stable-Full_Package.tar.gz"
       if [ "$error" = "" ]; then
         # Finally create the database for Wordpress to use
-        WebApps.createDB $session "jmsql-$uid" "admin" "$password"
+        WebApps.createDB $session "jmsql-$uid" "admin-$uid" "$password"
         if [ "$error" = "" ]; then
           # Configure joomla config and installer
           WebApps.configureJoomla
@@ -306,7 +306,7 @@ WebApps.create() {
       WebApps.downloadToHost "http://joomlacode.org/gf/download/frsrelease/13105/57239/Joomla_1.5.22-Stable-Full_Package.tar.gz" "Joomla_1.5.22-Stable-Full_Package.tar.gz"
       if [ "$error" = "" ]; then
         # Finally create the database for Wordpress to use
-        WebApps.createDB $session "jmsql-$uid" "admin" "$password"
+        WebApps.createDB $session "jmsql-$uid" "admin-$uid" "$password"
         if [ "$error" = "" ]; then
           # Configure joomla config and installer
           WebApps.configureJoomla
@@ -327,7 +327,7 @@ WebApps.create() {
       mkdir phpMyAdmin
       mv phpMyAdmin-3.3.10-all-languages phpMyAdmin/phpMyAdmin
       if [ "$error" = "" ]; then
-        authd runscript install-folder-contents "$session" "/var/openpanel/conf/staging/WebApps/tmp/phpMyAdmin/" "$vhostdir/public_html/"
+        authd runscript install-folder-contents "$session" "/var/openpanel/conf/staging/WebApps/tmp/phpMyAdmin/" "$vhostdir/public_html/" "www-data" "www-data" "777"
       fi
     fi
   else
