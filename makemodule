@@ -1,3 +1,7 @@
 coreunreg WebApps.module
 mkmodulexml < /var/openpanel/modules/WebApps.module/module.def > /var/openpanel/modules/WebApps.module/module.xml
+sed -i "s#commands>#scripts>#g" "/var/openpanel/modules/WebApps.module/module.xml"
+sed -i "s#<command #<script #g" "/var/openpanel/modules/WebApps.module/module.xml"
+sed -i "s#<getconfig>false</getconfig>#<getconfig>false</getconfig>\n		<wantsrpc>true</wantsrpc>#g" "/var/openpanel/modules/WebApps.module/module.xml"
 /etc/init.d/openpanel-core restart
+

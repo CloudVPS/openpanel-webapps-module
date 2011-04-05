@@ -85,12 +85,12 @@ WebApps.configureWordPress() {
     cp /var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-admin/install.php /var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-admin/install.bak
 
     # Perform simple swap of install defaults settings
-    replace="weblog_title.*'';$"
-    with="weblog_title = '$title';"
-    sed -i "s/$replace/$with/1" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-admin/install.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
-    replace="admin_email.*'';$"
-    with="admin_email = '$email';"
-    sed -i "s/$replace/$with/1" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-admin/install.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    #replace="weblog_title.*'';$"
+    #with="weblog_title = '$title';"
+    #sed -i "s/$replace/$with/1" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-admin/install.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    #replace="admin_email.*'';$"
+    #with="admin_email = '$email';"
+    #sed -i "s/$replace/$with/1" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-admin/install.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
   fi
 }
 
@@ -135,6 +135,31 @@ WebApps.configureJoomla() {
   fi
 }
 
+WebApps.configurePhpBB() {
+  if [ $# != 0 ]; then
+    error="WebApps.configureJoomla called with incorrect number of parameters: '$*'"
+  else
+    mv /var/openpanel/conf/staging/WebApps/tmp/phpBB3/config.php /var/openpanel/conf/staging/WebApps/tmp/phpBB3/config.bak
+    echo "<?php" > /var/openpanel/conf/staging/WebApps/tmp/phpBB3/config.php
+    echo "// phpBB 3.0.x auto-generated configuration file" >> /var/openpanel/conf/staging/WebApps/tmp/phpBB3/config.php
+    echo "// Do not change anything in this file!" >> /var/openpanel/conf/staging/WebApps/tmp/phpBB3/config.php
+    echo '$dbms'" = 'mysql';" >> /var/openpanel/conf/staging/WebApps/tmp/phpBB3/config.php
+    echo '$dbhost'" = '';" >> /var/openpanel/conf/staging/WebApps/tmp/phpBB3/config.php
+    echo '$dbport'" = '';" >> /var/openpanel/conf/staging/WebApps/tmp/phpBB3/config.php
+    echo '$dbname'" = 'phpbb-$uid';" >> /var/openpanel/conf/staging/WebApps/tmp/phpBB3/config.php
+    echo '$dbuser'" = 'admin-$uid';" >> /var/openpanel/conf/staging/WebApps/tmp/phpBB3/config.php
+    echo '$dbpasswd'" = '$password';" >> /var/openpanel/conf/staging/WebApps/tmp/phpBB3/config.php
+    echo '$table_prefix'" = 'phpbb_';" >> /var/openpanel/conf/staging/WebApps/tmp/phpBB3/config.php
+    echo '$acm_type'" = 'file';" >> /var/openpanel/conf/staging/WebApps/tmp/phpBB3/config.php
+    echo '$load_extensions'" = '';" >> /var/openpanel/conf/staging/WebApps/tmp/phpBB3/config.php
+    echo "" >> /var/openpanel/conf/staging/WebApps/tmp/phpBB3/config.php
+    echo "@define('PHPBB_INSTALLED', true);" >> /var/openpanel/conf/staging/WebApps/tmp/phpBB3/config.php
+    echo "// @define('DEBUG', true);" >> /var/openpanel/conf/staging/WebApps/tmp/phpBB3/config.php
+    echo "// @define('DEBUG_EXTRA', true);" >> /var/openpanel/conf/staging/WebApps/tmp/phpBB3/config.php
+    echo "?>" >> /var/openpanel/conf/staging/WebApps/tmp/phpBB3/config.php
+  fi
+}
+
 WebApps.downloadToHost() {
   if [ $# != 2 ]; then
     exiterror "WebApps.downloadToHost called with incorrect number of parameters: '$*'"
@@ -158,7 +183,11 @@ WebApps.downloadToHost() {
         mkdir /var/openpanel/conf/staging/WebApps/cache &>> /var/openpanel/conf/staging/WebApps/webapps.log
         cp $2 /var/openpanel/conf/staging/WebApps/cache/$2 &>> /var/openpanel/conf/staging/WebApps/webapps.log
       fi
-      tar -zxvf $2 &>> /var/openpanel/conf/staging/WebApps/unpack.log
+      if [[ $2 == *.bz2 ]]; then
+        tar -jxvf $2 &>> /var/openpanel/conf/staging/WebApps/unpack.log
+      else
+        tar -zxvf $2 &>> /var/openpanel/conf/staging/WebApps/unpack.log
+      fi
       rm $2
       if [ $? = 0 ]; then
         # Successfully unpacked downloaded file
@@ -199,17 +228,24 @@ WebApps.createDB () {
   fi
 }
 
-WebApps.create() {
-  title=$(coreval WebApps name)
-  model=$(coreval WebApps model)
-  password=$(coreval WebApps password)
-  password2=$(coreval WebApps password2)
-  email=$(coreval WebApps email)
+WebApps.createApp() {
+  #title=$(coreval WebApps name)
+  #model=$(coreval WebApps model)
+  #password=$(coreval WebApps password)
+  #password2=$(coreval WebApps password2)
+  #email=$(coreval WebApps email)
   id=$(coreval Domain:Vhost id)
   session=$(coreval OpenCORE:Session sessionid)
   user=""
   vhostdir=""
   error=""
+
+  #----------------------------------------------
+  # Trim leading and trailing slashes from subdir
+  if [ "$subdir" != "" ]; then
+    subdir=${subdir:1}
+    subdir=$(echo -n ${subdir%/})
+  fi
 
   #--------------------------------
   # Check that entered passwords match
@@ -247,14 +283,14 @@ WebApps.create() {
 
   #------------------------
   # Generate unique DB name (clipped to only 4 chars, may cause collisions)
-  hash=$(echo "${model}:$user:$id" | md5sum)
+  hash=$(echo "${model}:$user:$id:$subdir" | md5sum)
   fulluid=${hash:0:32}
   uid=${fulluid:0:4}
 
   #----------------------------------------
   # Perform appropriate installation action
   if [ ${model} = "WordPress" ]; then
-    if [ -f "$vhostdir/public_html/wp-config.php" ]; then
+    if [ -f "$vhostdir/public_html/$subdir/wp-config.php" ]; then
       error="WordPress is already installed for this vhost. To reinstall Wordpress you must first remove the existing installation (and associated database/files) and try again."
     else
       WebApps.downloadToHost "http://wordpress.org/latest.tar.gz" "latest.tar.gz"
@@ -265,12 +301,13 @@ WebApps.create() {
           # Configure wordpress config and installer
           WebApps.configureWordPress
           # Copy WordPress to vhost folder
-          authd runscript install-folder-contents "$session" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/" "$vhostdir/public_html/" "www-data" "www-data" "777"
+          mkdir "$vhostdir/public_html/$subdir"
+          authd runscript install-folder-contents "$session" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/" "$vhostdir/public_html/$subdir" "www-data" "www-data" "777"
         fi
       fi
     fi
   elif [ ${model} = "WordPress-3.1" ]; then
-    if [ -f "$vhostdir/public_html/wp-config.php" ]; then
+    if [ -f "$vhostdir/public_html/$subdir/wp-config.php" ]; then
       error="WordPress is already installed for this vhost. To reinstall WordPress you must first remove the existing installation (and associated database/files) and try again."
     else
       WebApps.downloadToHost "http://wordpress.org/wordpress-3.1.tar.gz" "wordpress-3.1.tar.gz"
@@ -281,12 +318,13 @@ WebApps.create() {
           # Configure wordpress config and installer
           WebApps.configureWordPress
           # Copy WordPress to vhost folder
-          authd runscript install-folder-contents "$session" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/" "$vhostdir/public_html/" "www-data" "www-data" "777"
+          mkdir "$vhostdir/public_html/$subdir"
+          authd runscript install-folder-contents "$session" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/" "$vhostdir/public_html/$subdir" "www-data" "www-data" "777"
         fi
       fi
     fi
   elif [ ${model} = "Joomla-1.6.0" ]; then
-    if [ -f "$vhostdir/public_html/configuration.php" ]; then
+    if [ -f "$vhostdir/public_html/$subdir/configuration.php" ]; then
       error="Joomla is already installed for this vhost. To reinstall Joomla you must first remove the existing installation (and associated database/files) and try again."
     else
       WebApps.downloadToHost "http://joomlacode.org/gf/download/frsrelease/13869/60197/Joomla_1.6.0-Stable-Full_Package.tar.gz" "Joomla_1.6.0-Stable-Full_Package.tar.gz"
@@ -298,13 +336,14 @@ WebApps.create() {
           WebApps.configureJoomla
           if [ "$error" = "" ]; then
             # Copy Joomla to vhost folder
-            authd runscript install-folder-contents "$session" "/var/openpanel/conf/staging/WebApps/tmp/joomla/" "$vhostdir/public_html/" "www-data" "www-data" "777"
+            mkdir "$vhostdir/public_html/$subdir"
+            authd runscript install-folder-contents "$session" "/var/openpanel/conf/staging/WebApps/tmp/joomla/" "$vhostdir/public_html/$subdir" "www-data" "www-data" "777"
           fi
         fi
       fi
     fi
   elif [ ${model} = "Joomla-1.5.22" ]; then
-    if [ -f "$vhostdir/public_html/configuration.php" ]; then
+    if [ -f "$vhostdir/public_html/$subdir/configuration.php" ]; then
       error="Joomla is already installed for this vhost. To reinstall Joomla you must first remove the existing installation (and associated database/files) and try again."
     else
       WebApps.downloadToHost "http://joomlacode.org/gf/download/frsrelease/13105/57239/Joomla_1.5.22-Stable-Full_Package.tar.gz" "Joomla_1.5.22-Stable-Full_Package.tar.gz"
@@ -316,7 +355,8 @@ WebApps.create() {
           WebApps.configureJoomla
           if [ "$error" = "" ]; then
             # Copy Joomla to vhost folder
-            authd runscript install-folder-contents "$session" "/var/openpanel/conf/staging/WebApps/tmp/joomla/" "$vhostdir/public_html/" "www-data" "www-data" "777"
+            mkdir "$vhostdir/public_html/$subdir"
+            authd runscript install-folder-contents "$session" "/var/openpanel/conf/staging/WebApps/tmp/joomla/" "$vhostdir/public_html/$subdir" "www-data" "www-data" "777"
           fi
         fi
       fi
@@ -324,14 +364,35 @@ WebApps.create() {
   elif [ ${model} = "Drupal" ]; then
     error="Drupal is not currently supported. Please select another WebApp."
   elif [ ${model} = "phpMyAdmin-3.3.10" ]; then
-    if [ -d "$vhostdir/phpMyAdmin" ]; then
+    if [ -d "$vhostdir/$subdir" ]; then
       error="phpMyAdmin is already installed for this vhost. To reinstall Joomla you must first remove the existing installation (and files) and try again."
     else
       WebApps.downloadToHost "http://downloads.sourceforge.net/project/phpmyadmin/phpMyAdmin/3.3.10/phpMyAdmin-3.3.10-all-languages.tar.gz?r=&ts=1301700394&use_mirror=cdnetworks-us-1" "phpMyAdmin-3.3.10-all-languages.tar.gz"
-      mkdir phpMyAdmin
-      mv phpMyAdmin-3.3.10-all-languages phpMyAdmin/phpMyAdmin
+      #mkdir phpMyAdmin
+      #mv phpMyAdmin-3.3.10-all-languages phpMyAdmin/phpMyAdmin
+      mv phpMyAdmin-3.3.10-all-languages phpMyAdmin
       if [ "$error" = "" ]; then
-        authd runscript install-folder-contents "$session" "/var/openpanel/conf/staging/WebApps/tmp/phpMyAdmin/" "$vhostdir/public_html/" "www-data" "www-data" "777"
+        mkdir "$vhostdir/public_html/$subdir"
+        authd runscript install-folder-contents "$session" "/var/openpanel/conf/staging/WebApps/tmp/phpMyAdmin/" "$vhostdir/public_html/$subdir" "www-data" "www-data" "777"
+      fi
+    fi
+  elif [ ${model} = "phpBB-3.0.8" ]; then
+    if [ -f "$vhostdir/public_html/$subdir/configuration.php" ]; then
+      error="phpBB is already installed for this vhost. To reinstall phpBB you must first remove the existing installation (and associated database/files) and try again."
+    else
+      WebApps.downloadToHost "http://www.phpbb.com/files/release/phpBB-3.0.8.tar.bz2" "phpBB-3.0.8.tar.bz2"
+      if [ "$error" = "" ]; then
+        # Finally create the database for Wordpress to use
+        WebApps.createDB $session "phpbb-$uid" "admin-$uid" "$password"
+        if [ "$error" = "" ]; then
+          # Configure phpBB config and installer
+          WebApps.configurePhpBB
+          if [ "$error" = "" ]; then
+            # Copy phpBB to vhost folder
+            mkdir "$vhostdir/public_html/$subdir"
+            authd runscript install-folder-contents "$session" "/var/openpanel/conf/staging/WebApps/tmp/phpBB3" "$vhostdir/public_html/$subdir" "www-data" "www-data" "777"
+          fi
+        fi
       fi
     fi
   else
@@ -348,12 +409,62 @@ WebApps.create() {
   fi
 }
 
-#WebApps.update() {
-#  WebApps.create
+#WebApps.updateApp() {
+#  WebApps.create "WordPress"
 #}
 
-WebApps.delete() {
+WebApps.deleteApp() {
   id=$(coreval Domain:Vhost id)
 }
 
+WebApps:WordPress.create() {
+  title=$(coreval WebApps:WordPress name)
+  model="WordPress-3.1"
+  password=$(coreval WebApps:WordPress password)
+  password2=$(coreval WebApps:WordPress password2)
+  email=$(coreval WebApps:WordPress email)
+  subdir=$(coreval WebApps:WordPress id)
+  WebApps.createApp
+}
+
+WebApps:Joomla.create() {
+  title=$(coreval WebApps:Joomla name)
+  model="Joomla-1.5.22"
+  password=$(coreval WebApps:Joomla password)
+  password2=$(coreval WebApps:Joomla password2)
+  email=$(coreval WebApps:Joomla email)
+  subdir=$(coreval WebApps:Joomla id)
+  WebApps.createApp
+}
+
+WebApps:phpMyAdmin.create() {
+  title="phpMyAdmin"
+  model="phpMyAdmin-3.3.10"
+  password="password"
+  password2="password"
+  email=""
+  subdir=$(coreval WebApps:phpMyAdmin id)
+  if [ "$subdir" != "" ]; then
+    subdir="/phpMyAdmin/"
+  fi
+  WebApps.createApp
+}
+
+WebApps:phpBB.create() {
+  title=$(coreval WebApps:phpBB name)
+  model="phpBB-3.0.8"
+  password=$(coreval WebApps:phpBB password)
+  password2=$(coreval WebApps:phpBB password2)
+  email=$(coreval WebApps:phpBB email)
+  subdir=$(coreval WebApps:phpBB id)
+  if [ "$subdir" != "" ]; then
+    subdir="/phpBB/"
+  fi
+  WebApps.createApp
+}
+
 implement WebApps.module
+implement WebApps:WordPress.module
+implement WebApps:Joomla.module
+implement WebApps:phpMyAdmin.module
+implement WebApps:phpBB.module

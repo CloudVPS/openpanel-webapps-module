@@ -4,85 +4,190 @@ module WebApps                < uuid cf2fc559-542c-4185-ab51-76170a28a6a3
                               < apitype commandline
                               < wantsrpc true
                               < getconfig false
+                              < requires User.module
                               < author Karl White
                               < license GPLv3
                               < url http://www.charisma-studios.com
-                              
-class WebApps                 < uuid 58c8d270-5841-4344-8502-7bdfda17ed1b
-                              < version 3
-                              < indexing auto
+
+class Meta:WebApps            < uuid 9b4ff04c-e850-489a-a13d-48e486d01063
+                              < version 1.1
+                              < indexing manual
                               < requires Domain:Vhost
                               < shortname WebApps
                               < description WebApps Installation
-                              < emptytext No webapps have been installed
-                              < title WebApps
-                              < uniquein class
                               # < parentrealm domainsuffix
-                              < allchildren true
-                              < capabilities create delete #update
-       
-    string name               : Name
-                              < regexp ^[a-zA-Z0-9 ]*$
-                              < gridwidth 10
+                              < emptytext WebApps are popular web applications that can be automatically downloaded, installed and configured for this website. Use the buttons below to get started.
+                              < title WebApps
+                              < metatype base
 
-    enum model                : Application
+    string type               : Installed WebApps
+                              < gridwidth 30
+
+    string id                 : Path
+                              < gridwidth 25
+
+    string description        : Information
+                              < gridwidth 45
+                              
+class WebApps:WordPress       < uuid 58c8d270-5841-4344-8502-7bdfda17ed1b
+                              < version 1.0
+                              < indexing manual
+                              < requires Domain:Vhost
+                              < uniquein class
+                              < shortname WordPress
+                              < title WordPress
+                              < description WordPress v3.1 Installation and Configuration
+                              < capabilities create delete #update
+                              < metatype derived
+                              < metabase Meta:WebApps
+                              < metadescription $name
+                              < maxinstances 1
+ 
+    enum wp-model             : Version
                               < enabled false
                               < default WordPress
                               < gridwidth 10
-
-#    string newdbname          : Database Name (leave blank)
-
-#    string newdbuser          : Database Username (leave blank)
-
+       
+    string name               : Site Title
+                              < regexp ^[a-zA-Z0-9 ]*$
+                              < gridwidth 10
+       
+    string id                 : Sub-folder (/ for root)
+                              < regexp ^/[a-zA-Z0-9-/]*/$
+                              < default /
+                              < example /
+                              < gridwidth 10
+                              < required false
+ 
     password password         : Database Password
                               < gridhide true
                               < visible false
-
+ 
     password password2        : Repeat Password
                               < gridhide true
                               < visible false
-
+ 
     string email              : Admin Email
                               < example webmaster@example.net
-
-# ----------------------------------------------------------------------------
-#class WebAppsService          < uuid 0ee62a75-5f08-43bc-9c75-497d1407390b
-#                              < version 1
-#                              < indexing manual
-#                              < shortname webappsd
-#                              < title WebApps Service
-#                              < description Global configuration for WebApps.
-#                              < uniquein class
-#                              < singleton webappsd
-#
-#    integer listenport        : TCP Listening Port
-#    string servername         : Advertised server name
-#
-# ----------------------------------------------------------------------------
-#class WebAppsUser             < uuid 2582d87a-a4cc-40fe-ba6e-c4a79581a6c1
-#                              < version 1
-#                              < indexing manual
-#                              < requires WebApps
-#                              < title WebApps User
-#                              < shortname user
-#                              < description A user that can log into the WebApps
-#                              < uniquein parent
-#                              < capabilities create delete update
-#
-#                              
-#    password password         : Password
-#                              < crypt md5
-#                              
+                              < regexp .+@.+
+                              
+class WebApps:Joomla          < uuid 8d86d8b5-2288-4fcf-b033-c5db86a222d8
+                              < version 1.0
+                              < indexing manual
+                              < requires Domain:Vhost
+                              < uniquein class
+                              < shortname Joomla
+                              < title Joomla
+                              < description Joomla v1.5.22 Installation and Configuration
+                              < capabilities create delete #update
+                              < metatype derived
+                              < metabase Meta:WebApps
+                              < metadescription $name
+                              < maxinstances 1
+ 
+    enum jm-model             : Version
+                              < enabled false
+                              < default Joomla-1.5.22
+                              < gridwidth 10
+       
+    string name               : Site Title
+                              < regexp ^[a-zA-Z0-9 ]*$
+                              < gridwidth 10
+       
+    string id                 : Sub-folder (/ for root)
+                              < regexp ^/[a-zA-Z0-9-/]*/$
+                              < default /
+                              < example /
+                              < gridwidth 10
+                              < required false
+ 
+    password password         : Database Password
+                              < gridhide true
+                              < visible false
+ 
+    password password2        : Repeat Password
+                              < gridhide true
+                              < visible false
+ 
+    string email              : Admin Email
+                              < example webmaster@example.net
+                              < regexp .+@.+
+                              
+class WebApps:phpMyAdmin      < uuid bb92020e-d714-415b-a0cd-0ff71ada1a01
+                              < version 1.0
+                              < indexing manual
+                              < requires Domain:Vhost
+                              < uniquein class
+                              < shortname phpMyAdmin
+                              < title phpMyAdmin
+                              < description phpMyAdmin v3.3.10 Installation and Configuration
+                              < capabilities create delete #update
+                              < metatype derived
+                              < metabase Meta:WebApps
+                              < metadescription $pm-model
+                              < maxinstances 1
+ 
+    enum pm-model             : Version
+                              < enabled false
+                              < default phpMyAdmin-3.3.10
+                              < gridwidth 10
+       
+    string id                 : Sub-folder (/ for root)
+                              < regexp ^/[a-zA-Z0-9-/]*/$
+                              < default /phpMyAdmin/
+                              < example /phpMyAdmin/
+                              < gridwidth 10
+                              < required false
+                              
+class WebApps:phpBB           < uuid 1ef1435f-e84b-43fa-9632-7be9f5f41e6f
+                              < version 1.0
+                              < indexing manual
+                              < requires Domain:Vhost
+                              < uniquein class
+                              < shortname phpBB
+                              < title phpBB
+                              < description phpBB v3.0.8 Installation and Configuration
+                              < capabilities create delete #update
+                              < metatype derived
+                              < metabase Meta:WebApps
+                              < metadescription $bb-model
+                              < maxinstances 1
+ 
+    enum bb-model             : Version
+                              < enabled false
+                              < default phpBB-3.0.8
+                              < gridwidth 10
+       
+    string id                 : Sub-folder (/ for root)
+                              < regexp ^/[a-zA-Z0-9-/]*/$
+                              < default /phpBB/
+                              < example /phpBB/
+                              < gridwidth 10
+                              < required false
+ 
+    password password         : Database Password
+                              < gridhide true
+                              < visible false
+ 
+    password password2        : Repeat Password
+                              < gridhide true
+                              < visible false
+                              
 # ============================================================================
 # ENUMS
 # ============================================================================
-enum model
+enum wp-model
     value WordPress           : Wordpress (latest)
     value WordPress-3.1       : Wordpress (3.1)
-#    value Joomla-1.6.0        : Joomla (1.6.0)
+
+enum jm-model
     value Joomla-1.5.22       : Joomla (1.5.22)
-    value Drupal              : Drupal (not yet supported)
+
+enum pm-model
     value phpMyAdmin-3.3.10   : phpMyAdmin (3.3.10)
+
+enum bb-model
+    value phpBB-3.0.8         : phpBB (3.0.8)
 
 # ============================================================================
 # AUTHD
