@@ -60,7 +60,7 @@ WebApps.configureWordPress() {
     cp /var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config-sample.php /var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config-sample.bak
 
     # Perform simple swap of database settings
-    sed -i "s/database_name_here/wpsql-$uid/g" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config-sample.php" &> /var/openpanel/conf/staging/WebApps/sed.log
+    sed -i "s/database_name_here/wpsql-$uid/g" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config-sample.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
     sed -i "s/username_here/admin-$uid/g" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config-sample.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
     sed -i "s/password_here/$password/g" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config-sample.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
     #sed -i "s/localhost/localhost/g" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config-sample.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
@@ -97,7 +97,7 @@ WebApps.configureWordPress() {
 
 WebApps.postConfigureWordPress() {
   if [ $# != 0 ]; then
-    error="WebApps.configureWordPress called with incorrect number of parameters: '$*'"
+    error="WebApps.postConfigureWordPress called with incorrect number of parameters: '$*'"
   else
     # Automatically complete 5-minute install wizard
     post="weblog_title=$(WebApps.urlencode $title)&user_name=admin&admin_password=$(WebApps.urlencode $password)&admin_password2=$(WebApps.urlencode $password)&admin_email=$(WebApps.urlencode $email)&submit=Install%20WordPress"
@@ -150,7 +150,7 @@ WebApps.configureJoomla() {
 
 WebApps.configurePhpBB() {
   if [ $# != 0 ]; then
-    error="WebApps.configureJoomla called with incorrect number of parameters: '$*'"
+    error="WebApps.configurePhpBB called with incorrect number of parameters: '$*'"
   else
     mv /var/openpanel/conf/staging/WebApps/tmp/phpBB3/config.php /var/openpanel/conf/staging/WebApps/tmp/phpBB3/config.bak
     echo "<?php" > /var/openpanel/conf/staging/WebApps/tmp/phpBB3/config.php
@@ -172,6 +172,27 @@ WebApps.configurePhpBB() {
     echo "?>" >> /var/openpanel/conf/staging/WebApps/tmp/phpBB3/config.php
   fi
 }
+
+WebApps.configureRoundcube() {
+  if [ $# != 0 ]; then
+    error="WebApps.configureRoundcube called with incorrect number of parameters: '$*'"
+  else
+    # Rename sample config
+    mv /var/openpanel/conf/staging/WebApps/tmp/roundcube/config/db.inc.php.dist /var/openpanel/conf/staging/WebApps/tmp/roundcube/config/db.inc.php
+    mv /var/openpanel/conf/staging/WebApps/tmp/roundcube/config/main.inc.php.dist /var/openpanel/conf/staging/WebApps/tmp/roundcube/config/main.inc.php
+
+    # Perform simple swap of database settings
+    sed -i "s#roundcube:pass@localhost/roundcubemail#admin-$uid:$password@localhost/rcsql-$uid#g" "/var/openpanel/conf/staging/WebApps/tmp/roundcube/config/db.inc.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+
+    # Apply default settings
+    sed -i "s#rcmail_config.*default_host.*;#rcmail_config['default_host'] = 'localhost';#g" "/var/openpanel/conf/staging/WebApps/tmp/roundcube/config/main.inc.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    sed -i "s#rcmail_config.*identities_level.*0;#rcmail_config['identities_level'] = 3;#g" "/var/openpanel/conf/staging/WebApps/tmp/roundcube/config/main.inc.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+
+    # Execute SQL install script
+    mysql -uadmin-$uid -p$password rcsql-$uid < /var/openpanel/conf/staging/WebApps/tmp/roundcube/SQL/mysql.initial.sql
+  fi
+}
+    
 
 WebApps.downloadToHost() {
   if [ $# != 2 ]; then
@@ -383,11 +404,9 @@ WebApps.createApp() {
     error="Drupal is not currently supported. Please select another WebApp."
   elif [ ${model} = "phpMyAdmin-3.3.10" ]; then
     if [ -d "$vhostdir/$subdir" ]; then
-      error="phpMyAdmin is already installed for this vhost. To reinstall Joomla you must first remove the existing installation (and files) and try again."
+      error="phpMyAdmin is already installed for this vhost. To reinstall phpMyAdmin you must first remove the existing installation (and files) and try again."
     else
       WebApps.downloadToHost "http://downloads.sourceforge.net/project/phpmyadmin/phpMyAdmin/3.3.10/phpMyAdmin-3.3.10-all-languages.tar.gz?r=&ts=1301700394&use_mirror=cdnetworks-us-1" "phpMyAdmin-3.3.10-all-languages.tar.gz"
-      #mkdir phpMyAdmin
-      #mv phpMyAdmin-3.3.10-all-languages phpMyAdmin/phpMyAdmin
       mv phpMyAdmin-3.3.10-all-languages phpMyAdmin
       if [ "$error" = "" ]; then
         mkdir "$vhostdir/public_html/$subdir"
@@ -409,6 +428,26 @@ WebApps.createApp() {
             # Copy phpBB to vhost folder
             mkdir "$vhostdir/public_html/$subdir"
             authd runscript install-folder-contents "$session" "/var/openpanel/conf/staging/WebApps/tmp/phpBB3" "$vhostdir/public_html/$subdir" "www-data" "www-data" "777"
+          fi
+        fi
+      fi
+    fi
+  elif [ ${model} = "Roundcube-0.5.1" ]; then
+    if [ -d "$vhostdir/$subdir" ]; then
+      error="Roundcube is already installed for this vhost. To reinstall Roundcube you must first remove the existing installation (and files) and try again."
+    else
+      WebApps.downloadToHost "http://downloads.sourceforge.net/project/roundcubemail/roundcubemail/0.5.1/roundcubemail-0.5.1.tar.gz?r=http%3A%2F%2Fwww.roundcube.net%2Fdownload&ts=1302059296&use_mirror=superb-sea2" "roundcubemail-0.5.1.tar.gz"
+      mv roundcubemail-0.5.1 roundcube
+      if [ "$error" = "" ]; then
+        # Finally create the database for Wordpress to use
+        WebApps.createDB $session "rcsql-$uid" "admin-$uid" "$password"
+        if [ "$error" = "" ]; then
+          # Configure Roundcube config and installer
+          WebApps.configureRoundcube
+          if [ "$error" = "" ]; then
+            # Copy Roundcube to vhost folder
+            mkdir "$vhostdir/public_html/$subdir"
+            authd runscript install-folder-contents "$session" "/var/openpanel/conf/staging/WebApps/tmp/roundcube/" "$vhostdir/public_html/$subdir" "www-data" "www-data" "777"
           fi
         fi
       fi
@@ -463,9 +502,6 @@ WebApps:phpMyAdmin.create() {
   password2="password"
   email=""
   subdir=$(coreval WebApps:phpMyAdmin id)
-  if [ "$subdir" != "" ]; then
-    subdir="/phpMyAdmin/"
-  fi
   WebApps.createApp
 }
 
@@ -476,9 +512,16 @@ WebApps:phpBB.create() {
   password2=$(coreval WebApps:phpBB password2)
   email=$(coreval WebApps:phpBB email)
   subdir=$(coreval WebApps:phpBB id)
-  if [ "$subdir" != "" ]; then
-    subdir="/phpBB/"
-  fi
+  WebApps.createApp
+}
+
+WebApps:Roundcube.create() {
+  title="Roundcube"
+  model="Roundcube-0.5.1"
+  password=$(coreval WebApps:Roundcube password)
+  password2=$(coreval WebApps:Roundcube password2)
+  email=""
+  subdir=$(coreval WebApps:Roundcube id)
   WebApps.createApp
 }
 
@@ -487,3 +530,4 @@ implement WebApps:WordPress.module
 implement WebApps:Joomla.module
 implement WebApps:phpMyAdmin.module
 implement WebApps:phpBB.module
+implement WebApps:Roundcube.module

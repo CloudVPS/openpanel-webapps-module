@@ -57,7 +57,7 @@ class WebApps:WordPress       < uuid 58c8d270-5841-4344-8502-7bdfda17ed1b
                               < default /
                               < example /
                               < gridwidth 10
-                              < required false
+                              < required true
  
     password password         : Database Password
                               < gridhide true
@@ -102,7 +102,7 @@ class WebApps:Joomla          < uuid 8d86d8b5-2288-4fcf-b033-c5db86a222d8
                               < default /
                               < example /
                               < gridwidth 10
-                              < required false
+                              < required true
  
     password password         : Database Password
                               < gridhide true
@@ -140,7 +140,7 @@ class WebApps:phpMyAdmin      < uuid bb92020e-d714-415b-a0cd-0ff71ada1a01
                               < default /phpMyAdmin/
                               < example /phpMyAdmin/
                               < gridwidth 10
-                              < required false
+                              < required true
                               
 class WebApps:phpBB           < uuid 1ef1435f-e84b-43fa-9632-7be9f5f41e6f
                               < version 1.0
@@ -166,7 +166,41 @@ class WebApps:phpBB           < uuid 1ef1435f-e84b-43fa-9632-7be9f5f41e6f
                               < default /phpBB/
                               < example /phpBB/
                               < gridwidth 10
-                              < required false
+                              < required true
+ 
+    password password         : Database Password
+                              < gridhide true
+                              < visible false
+ 
+    password password2        : Repeat Password
+                              < gridhide true
+                              < visible false
+                              
+class WebApps:Roundcube       < uuid 7f09a9d9-b6f5-4eec-bd4d-a9a3d0eef38a
+                              < version 1.0
+                              < indexing manual
+                              < requires Domain:Vhost
+                              < uniquein class
+                              < shortname Roundcube
+                              < title Roundcube
+                              < description Roundcube Webmail v0.5.1 Installation and Configuration
+                              < capabilities create delete #update
+                              < metatype derived
+                              < metabase Meta:WebApps
+                              < metadescription $rc-model
+                              < maxinstances 1
+ 
+    enum rc-model             : Version
+                              < enabled false
+                              < default Roundcube-0.5.1
+                              < gridwidth 10
+       
+    string id                 : Sub-folder (/ for root)
+                              < regexp ^/[a-zA-Z0-9-/]*/$
+                              < default /roundcube/
+                              < example /roundcube/
+                              < gridwidth 10
+                              < required true
  
     password password         : Database Password
                               < gridhide true
@@ -191,6 +225,9 @@ enum pm-model
 
 enum bb-model
     value phpBB-3.0.8         : phpBB (3.0.8)
+
+enum rc-model
+    value Roundcube-0.5.1     : Roundcube (0.5.1)
 
 # ============================================================================
 # AUTHD

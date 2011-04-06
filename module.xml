@@ -47,7 +47,7 @@
 			<parameters>
 				<p id="wp-model" enabled="false" visible="true" required="true" type="enum" default="WordPress" gridwidth="10">Version</p>
 				<p id="name" enabled="true" visible="true" required="true" type="string" regexp="^[a-zA-Z0-9 ]*$" gridwidth="10">Site Title</p>
-				<p id="id" enabled="true" visible="true" required="false" type="string" regexp="^/[a-zA-Z0-9-/]*/$" default="/" example="/" gridwidth="10">Sub-folder (/ for root)</p>
+				<p id="id" enabled="true" visible="true" required="true" type="string" regexp="^/[a-zA-Z0-9-/]*/$" default="/" example="/" gridwidth="10">Sub-folder (/ for root)</p>
 				<p id="password" enabled="true" visible="false" required="true" type="password" gridhide="true">Database Password</p>
 				<p id="password2" enabled="true" visible="false" required="true" type="password" gridhide="true">Repeat Password</p>
 				<p id="email" enabled="true" visible="true" required="true" type="string" example="webmaster@example.net" regexp=".+@.+">Admin Email</p>
@@ -71,7 +71,7 @@
 				<p id="jm-model" enabled="false" visible="true" required="true" type="enum" default="Joomla-1.5.22" gridwidth="10">Version</p>
 				<p id="sample" enabled="true" visible="true" required="true" type="bool" sameline="true">Install Sample Data</p>
 				<p id="name" enabled="true" visible="true" required="true" type="string" regexp="^[a-zA-Z0-9 ]*$" gridwidth="10">Site Title</p>
-				<p id="id" enabled="true" visible="true" required="false" type="string" regexp="^/[a-zA-Z0-9-/]*/$" default="/" example="/" gridwidth="10">Sub-folder (/ for root)</p>
+				<p id="id" enabled="true" visible="true" required="true" type="string" regexp="^/[a-zA-Z0-9-/]*/$" default="/" example="/" gridwidth="10">Sub-folder (/ for root)</p>
 				<p id="password" enabled="true" visible="false" required="true" type="password" gridhide="true">Database Password</p>
 				<p id="password2" enabled="true" visible="false" required="true" type="password" gridhide="true">Repeat Password</p>
 				<p id="email" enabled="true" visible="true" required="true" type="string" example="webmaster@example.net" regexp=".+@.+">Admin Email</p>
@@ -93,7 +93,7 @@
 			<maxinstances>1</maxinstances>
 			<parameters>
 				<p id="pm-model" enabled="false" visible="true" required="true" type="enum" default="phpMyAdmin-3.3.10" gridwidth="10">Version</p>
-				<p id="id" enabled="true" visible="true" required="false" type="string" regexp="^/[a-zA-Z0-9-/]*/$" default="/phpMyAdmin/" example="/phpMyAdmin/" gridwidth="10">Sub-folder (/ for root)</p>
+				<p id="id" enabled="true" visible="true" required="true" type="string" regexp="^/[a-zA-Z0-9-/]*/$" default="/phpMyAdmin/" example="/phpMyAdmin/" gridwidth="10">Sub-folder (/ for root)</p>
 			</parameters>
 		</class>
 		<class id="WebApps:phpBB">
@@ -112,7 +112,28 @@
 			<maxinstances>1</maxinstances>
 			<parameters>
 				<p id="bb-model" enabled="false" visible="true" required="true" type="enum" default="phpBB-3.0.8" gridwidth="10">Version</p>
-				<p id="id" enabled="true" visible="true" required="false" type="string" regexp="^/[a-zA-Z0-9-/]*/$" default="/phpBB/" example="/phpBB/" gridwidth="10">Sub-folder (/ for root)</p>
+				<p id="id" enabled="true" visible="true" required="true" type="string" regexp="^/[a-zA-Z0-9-/]*/$" default="/phpBB/" example="/phpBB/" gridwidth="10">Sub-folder (/ for root)</p>
+				<p id="password" enabled="true" visible="false" required="true" type="password" gridhide="true">Database Password</p>
+				<p id="password2" enabled="true" visible="false" required="true" type="password" gridhide="true">Repeat Password</p>
+			</parameters>
+		</class>
+		<class id="WebApps:Roundcube">
+			<uuid>7f09a9d9-b6f5-4eec-bd4d-a9a3d0eef38a</uuid>
+			<version>1.0</version>
+			<indexing>manual</indexing>
+			<requires>Domain:Vhost</requires>
+			<uniquein>class</uniquein>
+			<shortname>Roundcube</shortname>
+			<title>Roundcube</title>
+			<description>Roundcube Webmail v0.5.1 Installation and Configuration</description>
+			<capabilities create="true" delete="true"/>
+			<metatype>derived</metatype>
+			<metabase>Meta:WebApps</metabase>
+			<metadescription>$rc-model</metadescription>
+			<maxinstances>1</maxinstances>
+			<parameters>
+				<p id="rc-model" enabled="false" visible="true" required="true" type="enum" default="Roundcube-0.5.1" gridwidth="10">Version</p>
+				<p id="id" enabled="true" visible="true" required="true" type="string" regexp="^/[a-zA-Z0-9-/]*/$" default="/roundcube/" example="/roundcube/" gridwidth="10">Sub-folder (/ for root)</p>
 				<p id="password" enabled="true" visible="false" required="true" type="password" gridhide="true">Database Password</p>
 				<p id="password2" enabled="true" visible="false" required="true" type="password" gridhide="true">Repeat Password</p>
 			</parameters>
@@ -131,6 +152,9 @@
 		</enum>
 		<enum id="bb-model">
 			<value id="phpBB-3.0.8" val="phpBB-3.0.8">phpBB (3.0.8)</value>
+		</enum>
+		<enum id="rc-model">
+			<value id="Roundcube-0.5.1" val="Roundcube-0.5.1">Roundcube (0.5.1)</value>
 		</enum>
 	</enums>
 	<authdops>
