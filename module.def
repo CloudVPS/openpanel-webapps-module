@@ -89,6 +89,9 @@ class WebApps:Joomla          < uuid 8d86d8b5-2288-4fcf-b033-c5db86a222d8
                               < enabled false
                               < default Joomla-1.5.22
                               < gridwidth 10
+
+    bool sample               : Install Sample Data
+                              < sameline true
        
     string name               : Site Title
                               < regexp ^[a-zA-Z0-9 ]*$

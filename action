@@ -40,6 +40,18 @@ WebApps.parseXML() {
   fi
 }
 
+WebApps.urlencode() {
+  local arg
+  arg="$*"
+  while [[ "$arg" =~ ^([0-9a-zA-Z/:_\.\-]*)([^0-9a-zA-Z/:_\.\-])(.*) ]] ; do
+    echo -n "${BASH_REMATCH[1]}"
+    printf "%%%X" "'${BASH_REMATCH[2]}'"
+    arg="${BASH_REMATCH[3]}"
+  done
+  # the remaining part
+  echo -n "$arg"
+}
+
 WebApps.configureWordPress() {
   if [ $# != 0 ]; then
     error="WebApps.configureWordPress called with incorrect number of parameters: '$*'"
@@ -80,17 +92,18 @@ WebApps.configureWordPress() {
 
     # Rename config
     mv /var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config-sample.php /var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-config.php
+  fi
+}
 
-    # Backup install script
-    cp /var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-admin/install.php /var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-admin/install.bak
-
-    # Perform simple swap of install defaults settings
-    #replace="weblog_title.*'';$"
-    #with="weblog_title = '$title';"
-    #sed -i "s/$replace/$with/1" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-admin/install.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
-    #replace="admin_email.*'';$"
-    #with="admin_email = '$email';"
-    #sed -i "s/$replace/$with/1" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/wp-admin/install.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+WebApps.postConfigureWordPress() {
+  if [ $# != 0 ]; then
+    error="WebApps.configureWordPress called with incorrect number of parameters: '$*'"
+  else
+    # Automatically complete 5-minute install wizard
+    post="weblog_title=$(WebApps.urlencode $title)&user_name=admin&admin_password=$(WebApps.urlencode $password)&admin_password2=$(WebApps.urlencode $password)&admin_email=$(WebApps.urlencode $email)&submit=Install%20WordPress"
+    echo "wget -Oinstall.php -t3 --post-data \"$post\" \"http://$vhost/$subdir/wp-admin/install.php?step=2\"" &>> /var/openpanel/conf/staging/WebApps/wget.log
+    wget -Oinstall.php -t3 --post-data "$post" "http://$vhost/$subdir/wp-admin/install.php?step=2" &>> /var/openpanel/conf/staging/WebApps/wget.log
+    cat install.php &>> /var/openpanel/conf/staging/WebApps/wget.log
   fi
 }
 
@@ -122,13 +135,13 @@ WebApps.configureJoomla() {
     sed -i "s/#__/jos_/g" "/var/openpanel/conf/staging/WebApps/tmp/installation/sql/mysql/joomla.sql" &>> /var/openpanel/conf/staging/WebApps/sed.log
     sed -i "s/#__/jos_/g" "/var/openpanel/conf/staging/WebApps/tmp/installation/sql/mysql/sample_data.sql" &>> /var/openpanel/conf/staging/WebApps/sed.log
     mysql -uadmin-$uid -p$password jmsql-$uid < /var/openpanel/conf/staging/WebApps/tmp/installation/sql/mysql/joomla.sql
-    mysql -uadmin-$uid -p$password jmsql-$uid < /var/openpanel/conf/staging/WebApps/tmp/installation/sql/mysql/sample_data.sql
+    if [ $sample = "true" ]; then
+      mysql -uadmin-$uid -p$password jmsql-$uid < /var/openpanel/conf/staging/WebApps/tmp/installation/sql/mysql/sample_data.sql
+    fi
     mysql_cmd="mysql -u admin-$uid -p$password jmsql-$uid"
     datetime=$(date +'%F %T')
-#$fulluid
     passhash=$(echo -n "$password$fulluid" | md5sum)
     passsalt="${passhash:0:32}:$fulluid"
-#    exiterror "$passhash  |||  $passsalt"
     $mysql_cmd -e "INSERT INTO jos_users VALUES (62, 'Administrator', 'admin', '$email', '$passsalt', 'Super Administrator', 0, 1, 25, '$datetime', '$datetime', '', '')" &>> /var/openpanel/conf/staging/WebApps/dbpopulate.log
     $mysql_cmd -e "INSERT INTO jos_core_acl_aro VALUES (10,'users','62',0,'Administrator',0)" &>> /var/openpanel/conf/staging/WebApps/dbpopulate.log
     $mysql_cmd -e "INSERT INTO jos_core_acl_groups_aro_map VALUES (25,'',10)" &>> /var/openpanel/conf/staging/WebApps/dbpopulate.log
@@ -276,6 +289,7 @@ WebApps.createApp() {
   
   #---------------------------------------------
   # Ensure subdomain already exists (as a vhost)
+  vhost=$id
   vhostdir="/home/$user/sites/$id"
   if [ ! -d "$vhostdir/public_html" ]; then
     exiterror "Unexpected error! Invalid vhost. Unable to locate public_html folder."
@@ -303,6 +317,8 @@ WebApps.createApp() {
           # Copy WordPress to vhost folder
           mkdir "$vhostdir/public_html/$subdir"
           authd runscript install-folder-contents "$session" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/" "$vhostdir/public_html/$subdir" "www-data" "www-data" "777"
+          # Complete WordPress configuration
+          WebApps.postConfigureWordPress
         fi
       fi
     fi
@@ -320,6 +336,8 @@ WebApps.createApp() {
           # Copy WordPress to vhost folder
           mkdir "$vhostdir/public_html/$subdir"
           authd runscript install-folder-contents "$session" "/var/openpanel/conf/staging/WebApps/tmp/wordpress/" "$vhostdir/public_html/$subdir" "www-data" "www-data" "777"
+          # Complete WordPress configuration
+          WebApps.postConfigureWordPress
         fi
       fi
     fi
@@ -430,6 +448,7 @@ WebApps:WordPress.create() {
 WebApps:Joomla.create() {
   title=$(coreval WebApps:Joomla name)
   model="Joomla-1.5.22"
+  sample=$(coreval WebApps:Joomla sample)
   password=$(coreval WebApps:Joomla password)
   password2=$(coreval WebApps:Joomla password2)
   email=$(coreval WebApps:Joomla email)

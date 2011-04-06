@@ -69,6 +69,7 @@
 			<maxinstances>1</maxinstances>
 			<parameters>
 				<p id="jm-model" enabled="false" visible="true" required="true" type="enum" default="Joomla-1.5.22" gridwidth="10">Version</p>
+				<p id="sample" enabled="true" visible="true" required="true" type="bool" sameline="true">Install Sample Data</p>
 				<p id="name" enabled="true" visible="true" required="true" type="string" regexp="^[a-zA-Z0-9 ]*$" gridwidth="10">Site Title</p>
 				<p id="id" enabled="true" visible="true" required="false" type="string" regexp="^/[a-zA-Z0-9-/]*/$" default="/" example="/" gridwidth="10">Sub-folder (/ for root)</p>
 				<p id="password" enabled="true" visible="false" required="true" type="password" gridhide="true">Database Password</p>
