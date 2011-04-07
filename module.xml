@@ -21,7 +21,7 @@
 			<requires>Domain:Vhost</requires>
 			<shortname>WebApps</shortname>
 			<description>WebApps Installation</description>
-			<emptytext>WebApps are popular web applications that can be automatically downloaded, installed and configured for this website. Use the buttons below to get started.</emptytext>
+			<emptytext>WebApps are popular and useful applications that can be automatically downloaded, installed and configured directly on your website with just a few clicks. This saves you time and avoids the hassle of installing and configuring them manually.</emptytext>
 			<title>WebApps</title>
 			<metatype>base</metatype>
 			<parameters>
@@ -45,8 +45,8 @@
 			<metadescription>$name</metadescription>
 			<maxinstances>1</maxinstances>
 			<parameters>
-				<p id="wp-model" enabled="false" visible="true" required="true" type="enum" default="WordPress" gridwidth="10">Version</p>
-				<p id="name" enabled="true" visible="true" required="true" type="string" regexp="^[a-zA-Z0-9 ]*$" gridwidth="10">Site Title</p>
+				<p id="wp-model" enabled="false" visible="true" required="true" type="enum" default="WordPress" gridwidth="10" example="My New Blog">Version</p>
+				<p id="name" enabled="true" visible="true" required="true" type="string" regexp="^[a-zA-Z0-9- ]*$" gridwidth="10">Site Title</p>
 				<p id="id" enabled="true" visible="true" required="true" type="string" regexp="^/[a-zA-Z0-9-/]*/$" default="/" example="/" gridwidth="10">Sub-folder (/ for root)</p>
 				<p id="password" enabled="true" visible="false" required="true" type="password" gridhide="true">Database Password</p>
 				<p id="password2" enabled="true" visible="false" required="true" type="password" gridhide="true">Repeat Password</p>
@@ -68,7 +68,7 @@
 			<metadescription>$name</metadescription>
 			<maxinstances>1</maxinstances>
 			<parameters>
-				<p id="jm-model" enabled="false" visible="true" required="true" type="enum" default="Joomla-1.5.22" gridwidth="10">Version</p>
+				<p id="jm-model" enabled="false" visible="true" required="true" type="enum" default="Joomla-1.5.22" gridwidth="10" example="My New Website">Version</p>
 				<p id="sample" enabled="true" visible="true" required="true" type="bool" sameline="true">Install Sample Data</p>
 				<p id="name" enabled="true" visible="true" required="true" type="string" regexp="^[a-zA-Z0-9 ]*$" gridwidth="10">Site Title</p>
 				<p id="id" enabled="true" visible="true" required="true" type="string" regexp="^/[a-zA-Z0-9-/]*/$" default="/" example="/" gridwidth="10">Sub-folder (/ for root)</p>

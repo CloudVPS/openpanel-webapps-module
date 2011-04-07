@@ -16,7 +16,7 @@ class Meta:WebApps            < uuid 9b4ff04c-e850-489a-a13d-48e486d01063
                               < shortname WebApps
                               < description WebApps Installation
                               # < parentrealm domainsuffix
-                              < emptytext WebApps are popular web applications that can be automatically downloaded, installed and configured for this website. Use the buttons below to get started.
+                              < emptytext WebApps are popular and useful applications that can be automatically downloaded, installed and configured directly on your website with just a few clicks. This saves you time and avoids the hassle of installing and configuring them manually. To get started, use the buttons below to choose your first WebApp.
                               < title WebApps
                               < metatype base
 
@@ -47,9 +47,10 @@ class WebApps:WordPress       < uuid 58c8d270-5841-4344-8502-7bdfda17ed1b
                               < enabled false
                               < default WordPress
                               < gridwidth 10
+                              < example My New Blog
        
     string name               : Site Title
-                              < regexp ^[a-zA-Z0-9 ]*$
+                              < regexp ^[a-zA-Z0-9- ]*$
                               < gridwidth 10
        
     string id                 : Sub-folder (/ for root)
@@ -89,6 +90,7 @@ class WebApps:Joomla          < uuid 8d86d8b5-2288-4fcf-b033-c5db86a222d8
                               < enabled false
                               < default Joomla-1.5.22
                               < gridwidth 10
+                              < example My New Website
 
     bool sample               : Install Sample Data
                               < sameline true
