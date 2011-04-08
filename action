@@ -231,6 +231,13 @@ WebApps.configureosCommerce() {
     mysql_cmd="mysql -u admin-$uid -p$password ocsql-$uid"
     $mysql_cmd -e "UPDATE configuration SET configuration_value = 'tmp' WHERE configuration_key='SESSION_WRITE_DIRECTORY'" &>> /var/openpanel/conf/staging/WebApps/dbpopulate.log
 
+    # Create administrator user
+    passhash=$(echo -n "$password" | md5sum)
+    passsalt="${passhash:0:2}"
+    passsum=$(echo -n "$passsalt$password" | md5sum)
+    finalpass="${passsum:0:32}:$passsalt"
+    $mysql_cmd -e "INSERT INTO administrators VALUES (1,'admin','$finalpass')" &>> /var/openpanel/conf/staging/WebApps/dbpopulate.log
+    
     # Rename install folder (to prevent copy)
     mv /var/openpanel/conf/staging/WebApps/tmp/oscommerce-2.3.1/catalog/install /var/openpanel/conf/staging/WebApps/tmp/oscommerce-2.3.1/_install
 
@@ -377,7 +384,7 @@ WebApps.createApp() {
   # Perform appropriate installation action
   if [ ${model} = "WordPress" ]; then
     if [ -f "$vhostdir/public_html/$subdir/wp-config.php" ]; then
-      error="WordPress is already installed for this vhost. To reinstall Wordpress you must first remove the existing installation (and associated database/files) and try again."
+      error='WordPress is already installed for this vhost. To reinstall Wordpress you must first remove the existing installation (and associated database/files) and try again.'
     else
       WebApps.downloadToHost "http://wordpress.org/latest.tar.gz" "latest.tar.gz"
       if [ "$error" = "" ]; then
@@ -396,7 +403,7 @@ WebApps.createApp() {
     fi
   elif [ ${model} = "WordPress-3.1" ]; then
     if [ -f "$vhostdir/public_html/$subdir/wp-config.php" ]; then
-      error="WordPress is already installed for this vhost. To reinstall WordPress you must first remove the existing installation (and associated database/files) and try again."
+      error='WordPress is already installed for this vhost. To reinstall WordPress you must first remove the existing installation (and associated database/files) and try again.'
     else
       WebApps.downloadToHost "http://wordpress.org/wordpress-3.1.tar.gz" "wordpress-3.1.tar.gz"
       if [ "$error" = "" ]; then
@@ -415,7 +422,7 @@ WebApps.createApp() {
     fi
   elif [ ${model} = "Joomla-1.6.0" ]; then
     if [ -f "$vhostdir/public_html/$subdir/configuration.php" ]; then
-      error="Joomla is already installed for this vhost. To reinstall Joomla you must first remove the existing installation (and associated database/files) and try again."
+      error='Joomla is already installed for this vhost. To reinstall Joomla you must first remove the existing installation (and associated database/files) and try again.'
     else
       WebApps.downloadToHost "http://joomlacode.org/gf/download/frsrelease/13869/60197/Joomla_1.6.0-Stable-Full_Package.tar.gz" "Joomla_1.6.0-Stable-Full_Package.tar.gz"
       if [ "$error" = "" ]; then
@@ -434,7 +441,7 @@ WebApps.createApp() {
     fi
   elif [ ${model} = "Joomla-1.5.22" ]; then
     if [ -f "$vhostdir/public_html/$subdir/configuration.php" ]; then
-      error="Joomla is already installed for this vhost. To reinstall Joomla you must first remove the existing installation (and associated database/files) and try again."
+      error='Joomla is already installed for this vhost. To reinstall Joomla you must first remove the existing installation (and associated database/files) and try again.'
     else
       WebApps.downloadToHost "http://joomlacode.org/gf/download/frsrelease/13105/57239/Joomla_1.5.22-Stable-Full_Package.tar.gz" "Joomla_1.5.22-Stable-Full_Package.tar.gz"
       if [ "$error" = "" ]; then
@@ -455,7 +462,7 @@ WebApps.createApp() {
     error="Drupal is not currently supported. Please select another WebApp."
   elif [ ${model} = "phpMyAdmin-3.3.10" ]; then
     if [ -d "$vhostdir/$subdir" ]; then
-      error="phpMyAdmin is already installed for this vhost. To reinstall phpMyAdmin you must first remove the existing installation (and files) and try again."
+      error='phpMyAdmin is already installed for this vhost. To reinstall phpMyAdmin you must first remove the existing installation (and files) and try again.'
     else
       WebApps.downloadToHost "http://downloads.sourceforge.net/project/phpmyadmin/phpMyAdmin/3.3.10/phpMyAdmin-3.3.10-all-languages.tar.gz?r=&ts=1301700394&use_mirror=cdnetworks-us-1" "phpMyAdmin-3.3.10-all-languages.tar.gz"
       mv phpMyAdmin-3.3.10-all-languages phpMyAdmin
@@ -466,7 +473,7 @@ WebApps.createApp() {
     fi
   elif [ ${model} = "phpBB-3.0.8" ]; then
     if [ -f "$vhostdir/public_html/$subdir/configuration.php" ]; then
-      error="phpBB is already installed for this vhost. To reinstall phpBB you must first remove the existing installation (and associated database/files) and try again."
+      error='phpBB is already installed for this vhost. To reinstall phpBB you must first remove the existing installation (and associated database/files) and try again.'
     else
       WebApps.downloadToHost "http://www.phpbb.com/files/release/phpBB-3.0.8.tar.bz2" "phpBB-3.0.8.tar.bz2"
       if [ "$error" = "" ]; then
@@ -485,7 +492,7 @@ WebApps.createApp() {
     fi
   elif [ ${model} = "Roundcube-0.5.1" ]; then
     if [ -d "$vhostdir/$subdir" ]; then
-      error="Roundcube is already installed for this vhost. To reinstall Roundcube you must first remove the existing installation (and files) and try again."
+      error='Roundcube is already installed for this vhost. To reinstall Roundcube you must first remove the existing installation (and files) and try again'
     else
       WebApps.downloadToHost "http://downloads.sourceforge.net/project/roundcubemail/roundcubemail/0.5.1/roundcubemail-0.5.1.tar.gz?r=http%3A%2F%2Fwww.roundcube.net%2Fdownload&ts=1302059296&use_mirror=superb-sea2" "roundcubemail-0.5.1.tar.gz"
       mv roundcubemail-0.5.1 roundcube
@@ -505,7 +512,7 @@ WebApps.createApp() {
     fi
   elif [ ${model} = "osCommerce-2.3.1" ]; then
     if [ -f "$vhostdir/public_html/$subdir/includes/configure.php" ]; then
-      error="osCommerce is already installed for this vhost. To reinstall osCommerce you must first remove the existing installation (and files) and try again."
+      error='osCommerce is already installed for this vhost. To reinstall osCommerce you must first remove the existing installation (and files) and try again.'
     else
       WebApps.downloadToHost "http://www.oscommerce.com/redirect.php/go,49" "oscommerce-2.3.1.zip"
       if [ "$error" = "" ]; then
