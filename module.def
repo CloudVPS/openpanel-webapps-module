@@ -36,7 +36,7 @@ class WebApps:WordPress       < uuid 58c8d270-5841-4344-8502-7bdfda17ed1b
                               < uniquein class
                               < shortname WordPress
                               < title WordPress
-                              < description WordPress v3.1 Installation and Configuration
+                              < description WordPress Installation and Configuration
                               < capabilities create delete #update
                               < metatype derived
                               < metabase Meta:WebApps
@@ -53,7 +53,7 @@ class WebApps:WordPress       < uuid 58c8d270-5841-4344-8502-7bdfda17ed1b
                               < regexp ^[a-zA-Z0-9- ]*$
                               < gridwidth 10
        
-    string id                 : Sub-folder (/ for root)
+    string id                 : Sub-folder (// for root)
                               < regexp ^/[a-zA-Z0-9-/]*/$
                               < default /
                               < example /
@@ -79,7 +79,7 @@ class WebApps:Joomla          < uuid 8d86d8b5-2288-4fcf-b033-c5db86a222d8
                               < uniquein class
                               < shortname Joomla
                               < title Joomla
-                              < description Joomla v1.5.22 Installation and Configuration
+                              < description Joomla Installation and Configuration
                               < capabilities create delete #update
                               < metatype derived
                               < metabase Meta:WebApps
@@ -99,7 +99,7 @@ class WebApps:Joomla          < uuid 8d86d8b5-2288-4fcf-b033-c5db86a222d8
                               < regexp ^[a-zA-Z0-9 ]*$
                               < gridwidth 10
        
-    string id                 : Sub-folder (/ for root)
+    string id                 : Sub-folder (// for root)
                               < regexp ^/[a-zA-Z0-9-/]*/$
                               < default /
                               < example /
@@ -125,7 +125,7 @@ class WebApps:phpMyAdmin      < uuid bb92020e-d714-415b-a0cd-0ff71ada1a01
                               < uniquein class
                               < shortname phpMyAdmin
                               < title phpMyAdmin
-                              < description phpMyAdmin v3.3.10 Installation and Configuration
+                              < description phpMyAdmin Installation and Configuration
                               < capabilities create delete #update
                               < metatype derived
                               < metabase Meta:WebApps
@@ -137,7 +137,7 @@ class WebApps:phpMyAdmin      < uuid bb92020e-d714-415b-a0cd-0ff71ada1a01
                               < default phpMyAdmin-3.3.10
                               < gridwidth 10
        
-    string id                 : Sub-folder (/ for root)
+    string id                 : Sub-folder (// for root)
                               < regexp ^/[a-zA-Z0-9-/]*/$
                               < default /phpMyAdmin/
                               < example /phpMyAdmin/
@@ -151,7 +151,7 @@ class WebApps:phpBB           < uuid 1ef1435f-e84b-43fa-9632-7be9f5f41e6f
                               < uniquein class
                               < shortname phpBB
                               < title phpBB
-                              < description phpBB v3.0.8 Installation and Configuration
+                              < description phpBB Installation and Configuration
                               < capabilities create delete #update
                               < metatype derived
                               < metabase Meta:WebApps
@@ -163,7 +163,7 @@ class WebApps:phpBB           < uuid 1ef1435f-e84b-43fa-9632-7be9f5f41e6f
                               < default phpBB-3.0.8
                               < gridwidth 10
        
-    string id                 : Sub-folder (/ for root)
+    string id                 : Sub-folder (// for root)
                               < regexp ^/[a-zA-Z0-9-/]*/$
                               < default /phpBB/
                               < example /phpBB/
@@ -185,7 +185,7 @@ class WebApps:Roundcube       < uuid 7f09a9d9-b6f5-4eec-bd4d-a9a3d0eef38a
                               < uniquein class
                               < shortname Roundcube
                               < title Roundcube
-                              < description Roundcube Webmail v0.5.1 Installation and Configuration
+                              < description Roundcube Webmail Installation and Configuration
                               < capabilities create delete #update
                               < metatype derived
                               < metabase Meta:WebApps
@@ -197,10 +197,44 @@ class WebApps:Roundcube       < uuid 7f09a9d9-b6f5-4eec-bd4d-a9a3d0eef38a
                               < default Roundcube-0.5.1
                               < gridwidth 10
        
-    string id                 : Sub-folder (/ for root)
+    string id                 : Sub-folder (// for root)
                               < regexp ^/[a-zA-Z0-9-/]*/$
                               < default /roundcube/
                               < example /roundcube/
+                              < gridwidth 10
+                              < required true
+ 
+    password password         : Database Password
+                              < gridhide true
+                              < visible false
+ 
+    password password2        : Repeat Password
+                              < gridhide true
+                              < visible false
+                              
+class WebApps:osCommerce      < uuid 8fffafbb-00c9-45ee-8fe2-355f7abc288d
+                              < version 1.0
+                              < indexing manual
+                              < requires Domain:Vhost
+                              < uniquein class
+                              < shortname osCommerce
+                              < title osCommerce
+                              < description osCommerce Installation and Configuration
+                              < capabilities create delete #update
+                              < metatype derived
+                              < metabase Meta:WebApps
+                              < metadescription $oc-model
+                              < maxinstances 1
+ 
+    enum oc-model             : Version
+                              < enabled false
+                              < default osCommerce-2.3.1
+                              < gridwidth 10
+       
+    string id                 : Sub-folder (// for root)
+                              < regexp ^/[a-zA-Z0-9-/]*/$
+                              < default /catalog/
+                              < example /catalog/
                               < gridwidth 10
                               < required true
  
@@ -230,6 +264,9 @@ enum bb-model
 
 enum rc-model
     value Roundcube-0.5.1     : Roundcube (0.5.1)
+
+enum oc-model
+    value osCommerce-2.3.1    : osCommerce (2.3.1)
 
 # ============================================================================
 # AUTHD

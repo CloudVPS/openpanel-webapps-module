@@ -42,11 +42,10 @@ if [ -z "$FUID" ]; then
 fi
 
 # move the files from source to destination
-/var/openpanel/tools/runas 0 0 /bin/mv -n -v "$FROM_FOLDER"* "$TO_FOLDER" >> /var/openpanel/log/installbg.log
-# || {
-#	echo "Folder install failed ($*)" >> /var/openpanel/log/installbg.log
-#	exit 5
-#}
+/var/openpanel/tools/runas 0 0 /bin/mv -n -v "$FROM_FOLDER"* "$TO_FOLDER" || {
+	echo "Folder install failed ($*)" >> /var/openpanel/log/installbg.log
+	exit 5
+}
 if [ $FGID != "" ]; then
   if [ $FUID != "" ]; then
     chown -R $FGID:$FUID $TO_FOLDER
