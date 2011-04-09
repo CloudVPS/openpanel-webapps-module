@@ -202,12 +202,17 @@ WebApps.configureosCommerce() {
     sed -i "s#define.*DB_SERVER_USERNAME'.*;#define\('DB_SERVER_USERNAME', 'admin-$uid'\);#g" "/var/openpanel/conf/staging/WebApps/tmp/oscommerce-2.3.1/catalog/includes/configure.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
     sed -i "s#define.*DB_SERVER_PASSWORD'.*;#define\('DB_SERVER_PASSWORD', '$password'\);#g" "/var/openpanel/conf/staging/WebApps/tmp/oscommerce-2.3.1/catalog/includes/configure.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
     sed -i "s#define.*DB_DATABASE'.*;#define\('DB_DATABASE', 'ocsql-$uid'\);#g" "/var/openpanel/conf/staging/WebApps/tmp/oscommerce-2.3.1/catalog/includes/configure.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
-    sed -i "s#define.*HTTP_SERVER'.*;#define\('HTTP_SERVER', 'http://$vhost/'\);#g" "/var/openpanel/conf/staging/WebApps/tmp/oscommerce-2.3.1/catalog/includes/configure.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
-    sed -i "s#define.*HTTPS_SERVER'.*;#define\('HTTPS_SERVER', 'https://$vhost/'\);#g" "/var/openpanel/conf/staging/WebApps/tmp/oscommerce-2.3.1/catalog/includes/configure.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
-    sed -i "s#define.*HTTP_CATALOG_SERVER'.*;#define\('HTTP_CATALOG_SERVER', 'http://$vhost/$subdir'\);#g" "/var/openpanel/conf/staging/WebApps/tmp/oscommerce-2.3.1/catalog/includes/configure.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
-    sed -i "s#define.*HTTPS_CATALOG_SERVER'.*;#define\('HTTPS_CATALOG_SERVER', 'https://$vhost/$subdir'\);#g" "/var/openpanel/conf/staging/WebApps/tmp/oscommerce-2.3.1/catalog/includes/configure.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    sed -i "s#define.*HTTP_SERVER'.*;#define\('HTTP_SERVER', 'http://$vhost'\);#g" "/var/openpanel/conf/staging/WebApps/tmp/oscommerce-2.3.1/catalog/includes/configure.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    sed -i "s#define.*HTTPS_SERVER'.*;#define\('HTTPS_SERVER', 'https://$vhost'\);#g" "/var/openpanel/conf/staging/WebApps/tmp/oscommerce-2.3.1/catalog/includes/configure.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    sed -i "s#define.*HTTP_CATALOG_SERVER'.*;#define\('HTTP_CATALOG_SERVER', 'https://$vhost'\);#g" "/var/openpanel/conf/staging/WebApps/tmp/oscommerce-2.3.1/catalog/includes/configure.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    sed -i "s#define.*HTTPS_CATALOG_SERVER'.*;#define\('HTTPS_CATALOG_SERVER', 'https://$vhost'\);#g" "/var/openpanel/conf/staging/WebApps/tmp/oscommerce-2.3.1/catalog/includes/configure.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    sed -i "s#define.*DIR_WS_HTTP_CATALOG'.*;#define\('DIR_WS_HTTP_CATALOG', '/$subdir/'\);#g" "/var/openpanel/conf/staging/WebApps/tmp/oscommerce-2.3.1/catalog/includes/configure.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    sed -i "s#define.*DIR_WS_HTTPS_CATALOG'.*;#define\('DIR_WS_HTTPS_CATALOG', '/$subdir/'\);#g" "/var/openpanel/conf/staging/WebApps/tmp/oscommerce-2.3.1/catalog/includes/configure.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
     sed -i "s#define.*STORE_SESSIONS'.*;#define\('STORE_SESSIONS', 'mysql'\);#g" "/var/openpanel/conf/staging/WebApps/tmp/oscommerce-2.3.1/catalog/includes/configure.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
     sed -i "s#define.*HTTP_COOKIE_DOMAIN'.*;#define\('HTTP_COOKIE_DOMAIN', '$vhost'\);#g" "/var/openpanel/conf/staging/WebApps/tmp/oscommerce-2.3.1/catalog/includes/configure.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    sed -i "s#define.*HTTPS_COOKIE_DOMAIN'.*;#define\('HTTPS_COOKIE_DOMAIN', '$vhost'\);#g" "/var/openpanel/conf/staging/WebApps/tmp/oscommerce-2.3.1/catalog/includes/configure.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    sed -i "s#define.*HTTP_COOKIE_PATH'.*;#define\('HTTP_COOKIE_PATH', '/$subdir/'\);#g" "/var/openpanel/conf/staging/WebApps/tmp/oscommerce-2.3.1/catalog/includes/configure.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
+    sed -i "s#define.*HTTPS_COOKIE_PATH'.*;#define\('HTTPS_COOKIE_PATH', '/$subdir/'\);#g" "/var/openpanel/conf/staging/WebApps/tmp/oscommerce-2.3.1/catalog/includes/configure.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
     sed -i "s#define.*DIR_FS_CATALOG'.*;#define\('DIR_FS_CATALOG', '$vhostdir/$subdir/'\);#g" "/var/openpanel/conf/staging/WebApps/tmp/oscommerce-2.3.1/catalog/includes/configure.php" &>> /var/openpanel/conf/staging/WebApps/sed.log
 
     # Perform simple swap of ADMIN database settings
@@ -321,11 +326,6 @@ WebApps.createDB () {
 }
 
 WebApps.createApp() {
-  #title=$(coreval WebApps name)
-  #model=$(coreval WebApps model)
-  #password=$(coreval WebApps password)
-  #password2=$(coreval WebApps password2)
-  #email=$(coreval WebApps email)
   id=$(coreval Domain:Vhost id)
   session=$(coreval OpenCORE:Session sessionid)
   user=""

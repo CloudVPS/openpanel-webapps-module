@@ -1,0 +1,71 @@
+#!/bin/sh
+#
+
+cd /tmp
+
+echo "Entered change-permission ($*)..." >> /var/openpanel/log/change-permission.log
+
+# validate session-id
+echo "Validating session-id..." >> /var/openpanel/log/change-permission.log
+SESSION_ID=`echo "$1" | egrep "^[-0123456789abcdef]*$"`
+echo "Validating session-id..." >> /var/openpanel/log/change-permission.log
+if [ -z "$SESSION_ID" ]; then
+  echo "Invalid session ($*)" >> /var/openpanel/log/change-permission.log
+  exit 2
+fi
+
+echo "Validated session-id..." >> /var/openpanel/log/change-permission.log
+
+# parse other arguments
+DESTITEM="$2"
+if [ -z "$DESTITEM" ]; then
+  echo "No target specified ($*)" >> /var/openpanel/log/change-permission.log
+  exit 3
+fi
+
+echo "Validated target..." >> /var/openpanel/log/change-permission.log
+
+# optional arguments
+FUID="$3"
+FGID="$4"
+MODE="$5"
+CHARGS="$6"
+
+echo "Read arguments..." >> /var/openpanel/log/change-permission.log
+
+# set defaults for the optionals if needed
+if [ -z "$MODE" ]; then
+  MODE=""
+fi
+if [ -z "$FGID" ]; then
+  FGID=""
+fi
+if [ -z "$FUID" ]; then
+  FUID=""
+fi
+if [ -z "$CHARGS" ]; then
+  CHARGS=""
+fi
+
+echo "Applied defaults..." >> /var/openpanel/log/change-permission.log
+
+# change permissions
+if [ $MODE != "" ]; then
+  echo "  Setting MODE... (MODE:$MODE | CHARGS:$CHARGS)" >> /var/openpanel/log/change-permission.log
+  /var/openpanel/tools/runas 0 0 /bin/chmod $CHARGS $MODE $DESTITEM >> /var/openpanel/log/change-permission.log
+  echo "  Done setting MODE" >> /var/openpanel/log/change-permission.log
+fi
+if [ $FGID != "" ]; then
+  if [ $FUID != "" ]; then
+    echo "  Setting FGID+FUID... (FGID:$FGID | FUID:$FUID | CHARGS:$CHARGS)" >> /var/openpanel/log/change-permission.log
+    /var/openpanel/tools/runas 0 0 /bin/chown $CHARGS $FGID:$FUID $DESTITEM >> /var/openpanel/log/change-permission.log
+    echo "  Done setting FGID+FUID" >> /var/openpanel/log/change-permission.log
+  else
+    echo "  Setting FGID... (FGID:$FGID | CHARGS:$CHARGS)" >> /var/openpanel/log/change-permission.log
+    /var/openpanel/tools/runas 0 0 /bin/chown $CHARGS $FGID $DESTITEM >> /var/openpanel/log/change-permission.log
+    echo "  Done setting FGID" >> /var/openpanel/log/change-permission.log
+  fi
+fi
+
+echo "Exiting change-permission... (MODE:$MODE | FGID:$FGID | FUID:$FUID | CHARGS:$CHARGS" >> /var/openpanel/log/change-permission.log
+exit 0

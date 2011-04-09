@@ -12,6 +12,8 @@
 		<apitype>commandline</apitype>
 		<getconfig>false</getconfig>
 		<wantsrpc>true</wantsrpc>
+		<wantsrpc>true</wantsrpc>
+		<wantsrpc>true</wantsrpc>
 	</implementation>
 	<classes>
 		<class id="Meta:WebApps">

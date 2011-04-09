@@ -29,23 +29,41 @@ fi
 FUID="$4"
 FGID="$5"
 MODE="$6"
+MVARGS="$7"
 
 # set defaults for the optionals if needed
 if [ -z "$MODE" ]; then
-  MODE="0644"
+  MODE=""
+fi
+if [ $MODE = "0" ]; then
+  MODE=""
 fi
 if [ -z "$FGID" ]; then
+  FGID=""
+fi
+if [ $FGID = "0" ]; then
   FGID=""
 fi
 if [ -z "$FUID" ]; then
   FUID=""
 fi
+if [ $FUID = "0" ]; then
+  FUID=""
+fi
+if [ -z "$MVARGS" ]; then
+  MVARGS="-n -v"
+fi
 
 # move the files from source to destination
-/var/openpanel/tools/runas 0 0 /bin/mv -n -v "$FROM_FOLDER"* "$TO_FOLDER" || {
-	echo "Folder install failed ($*)" >> /var/openpanel/log/installbg.log
-	exit 5
-}
+#(/var/openpanel/tools/runas 0 0 /bin/mv $MVARGS "$FROM_FOLDER"* "$TO_FOLDER" >> /var/openpanel/log/installbg.log) || {
+#  (/var/openpanel/tools/runas 0 0 /bin/mv $MVARGS "$FROM_FOLDER".[^.]* "$TO_FOLDER" >> /var/openpanel/log/installbg.log) || {
+#    echo "Folder install failed ($*)" >> /var/openpanel/log/installbg.log
+#    exit 5
+#  }
+#}
+/var/openpanel/tools/runas 0 0 /bin/mv $MVARGS "$FROM_FOLDER"* "$TO_FOLDER" >> /var/openpanel/log/installbg.log
+/var/openpanel/tools/runas 0 0 /bin/mv $MVARGS "$FROM_FOLDER".[!.]* "$TO_FOLDER" >> /var/openpanel/log/installbg.log
+
 if [ $FGID != "" ]; then
   if [ $FUID != "" ]; then
     chown -R $FGID:$FUID $TO_FOLDER
@@ -53,7 +71,9 @@ if [ $FGID != "" ]; then
     chown -R $FGID $TO_FOLDER
   fi
 fi
-chmod -R $MODE $TO_FOLDER
+if [ $MODE != "" ]; then
+  chmod -R $MODE $TO_FOLDER
+fi
 
 echo "Exiting install-folder-contents..." >> /var/openpanel/log/installbg.log
 exit 0
